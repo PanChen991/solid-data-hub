@@ -1,13 +1,32 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from 'react';
+import { AppLayout } from '@/components/layout/AppLayout';
+import { Dashboard } from '@/components/pages/Dashboard';
+import { Documents } from '@/components/pages/Documents';
+import { IntelligencePage } from '@/components/pages/Intelligence';
+import { AIAssistant } from '@/components/pages/AIAssistant';
 
 const Index = () => {
+  const [currentPage, setCurrentPage] = useState('dashboard');
+
+  const renderPage = () => {
+    switch (currentPage) {
+      case 'dashboard':
+        return <Dashboard onNavigate={setCurrentPage} />;
+      case 'documents':
+        return <Documents />;
+      case 'intelligence':
+        return <IntelligencePage />;
+      case 'assistant':
+        return <AIAssistant />;
+      default:
+        return <Dashboard onNavigate={setCurrentPage} />;
+    }
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
-    </div>
+    <AppLayout currentPage={currentPage} onNavigate={setCurrentPage}>
+      {renderPage()}
+    </AppLayout>
   );
 };
 
