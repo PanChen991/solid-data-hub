@@ -3,13 +3,29 @@
 export interface Document {
   id: string;
   name: string;
-  type: 'pdf' | 'docx' | 'xlsx' | 'pptx';
-  size: string;
-  createdAt: string;
-  author: string;
-  tags: string[];
-  summary: string;
-  department: string;
+  type: 'pdf' | 'docx' | 'xlsx' | 'pptx' | 'folder';
+  size?: string;
+  createdAt?: string;
+  author?: string;
+  tags?: string[];
+  summary?: string;
+  department?: string;
+  isLocked?: boolean;
+  updatedAgo?: string;
+}
+
+export interface FolderItem {
+  id: string;
+  name: string;
+  type: 'folder' | 'pdf' | 'docx' | 'xlsx' | 'pptx';
+  icon?: string;
+  badge?: string;
+  badgeColor?: 'blue' | 'amber' | 'green' | 'red';
+  isLocked?: boolean;
+  size?: string;
+  updatedAgo?: string;
+  author?: string;
+  children?: FolderItem[];
 }
 
 export interface Intelligence {
@@ -22,6 +38,7 @@ export interface Intelligence {
   abstract: string;
   authors?: string[];
   patentNumber?: string;
+  status?: string;
 }
 
 export interface Activity {
@@ -39,73 +56,136 @@ export interface ChatMessage {
   timestamp: string;
 }
 
-// Internal Documents
-export const documents: Document[] = [
+// 3-Tier Folder Structure
+export const rootSpaces: FolderItem[] = [
   {
-    id: '1',
-    name: '2024_Q4_硫化物电解质稳定性测试报告.pdf',
-    type: 'pdf',
-    size: '4.2 MB',
-    createdAt: '2024-12-15',
-    author: '张博士',
-    tags: ['硫化物', '电解质', '稳定性测试'],
-    summary: '本报告详细记录了2024年第四季度对Li₆PS₅Cl硫化物电解质在不同温度和湿度条件下的稳定性测试结果。测试涵盖了电化学阻抗谱(EIS)、X射线衍射(XRD)和拉曼光谱分析。结果表明，该电解质在干燥氩气环境下表现出优异的稳定性，但在相对湿度超过5%时会发生明显的分解反应。',
-    department: '电解质研发部',
+    id: 'public',
+    name: '00_公共资源库',
+    type: 'folder',
+    badge: '全员可见',
+    badgeColor: 'blue',
+    children: [
+      {
+        id: 'public-templates',
+        name: '模板文件夹',
+        type: 'folder',
+        children: [],
+      },
+      {
+        id: 'public-training',
+        name: '培训资料',
+        type: 'folder',
+        children: [],
+      },
+      {
+        id: 'public-policy',
+        name: '公司政策与规章',
+        type: 'folder',
+        children: [],
+      },
+    ],
   },
   {
-    id: '2',
-    name: '无负极金属锂沉积工艺_SOP_v2.docx',
-    type: 'docx',
-    size: '1.8 MB',
-    createdAt: '2024-11-28',
-    author: '李工程师',
-    tags: ['无负极', '金属锂', '工艺标准'],
-    summary: '本标准操作程序(SOP)第二版详细描述了无负极固态电池中金属锂的原位沉积工艺。包括集流体预处理、电解质界面改性、充电协议优化等关键步骤。相比第一版，新增了脉冲充电模式和温度梯度控制方案，可有效减少锂枝晶生成并提高库伦效率至99.5%以上。',
-    department: '工艺开发部',
+    id: 'departments',
+    name: '01_职能部门空间',
+    type: 'folder',
+    badge: '部门隔离',
+    badgeColor: 'amber',
+    children: [
+      {
+        id: 'dept-01',
+        name: 'Dept_01_无机电解质',
+        type: 'folder',
+        children: [
+          {
+            id: 'dept-01-manager',
+            name: 'Manager_Only_预算与人事',
+            type: 'folder',
+            isLocked: true,
+          },
+          {
+            id: 'dept-01-sop',
+            name: '材料合成工艺_SOP',
+            type: 'folder',
+          },
+          {
+            id: 'dept-01-file-1',
+            name: 'LPSC_502批次_XRD图谱分析.pdf',
+            type: 'pdf',
+            size: '4.2 MB',
+            updatedAgo: '10 分钟前',
+            author: 'Wang',
+          },
+          {
+            id: 'dept-01-file-2',
+            name: '硫化物电解质_电导率测试报告_2025Q4.xlsx',
+            type: 'xlsx',
+            size: '1.8 MB',
+            updatedAgo: '2 小时前',
+            author: 'Zhang',
+          },
+          {
+            id: 'dept-01-file-3',
+            name: '高通量球磨设备_维护记录.docx',
+            type: 'docx',
+            size: '856 KB',
+            updatedAgo: '昨天',
+            author: 'Li',
+          },
+        ],
+      },
+      {
+        id: 'dept-02',
+        name: 'Dept_02_高分子与界面',
+        type: 'folder',
+        children: [],
+      },
+      {
+        id: 'dept-03',
+        name: 'Dept_03_全固态电芯工艺',
+        type: 'folder',
+        children: [],
+      },
+      {
+        id: 'dept-04',
+        name: 'Dept_04_测试与表征',
+        type: 'folder',
+        children: [],
+      },
+      {
+        id: 'dept-05',
+        name: 'Dept_05_综合行政',
+        type: 'folder',
+        children: [],
+      },
+    ],
   },
   {
-    id: '3',
-    name: '高通量实验室设备清单_2025.xlsx',
-    type: 'xlsx',
-    size: '856 KB',
-    createdAt: '2024-12-01',
-    author: '王主管',
-    tags: ['设备管理', '高通量', '实验室'],
-    summary: '2025年度高通量材料筛选实验室设备采购与维护清单。包含自动化电池组装系统、多通道电化学工作站、原位XRD设备等核心设备的规格参数、供应商信息、维护周期及预算分配。本年度新增AI驱动的实验设计模块。',
-    department: '实验室管理部',
-  },
-  {
-    id: '4',
-    name: '固态电池安全性评估指南.pdf',
-    type: 'pdf',
-    size: '3.1 MB',
-    createdAt: '2024-10-20',
-    author: '陈博士',
-    tags: ['安全性', '评估标准', '测试方法'],
-    summary: '本指南涵盖固态电池从单体到模组的全面安全性评估方法，包括热失控测试、机械滥用测试、电滥用测试等。特别针对硫化物和氧化物电解质体系制定了专门的测试协议，并与现行锂离子电池标准进行了对照说明。',
-    department: '安全测试部',
-  },
-  {
-    id: '5',
-    name: '正极包覆工艺优化方案.pptx',
-    type: 'pptx',
-    size: '12.5 MB',
-    createdAt: '2024-11-15',
-    author: '刘研究员',
-    tags: ['正极', '包覆工艺', '界面改性'],
-    summary: '本演示文稿汇报了LiNbO₃包覆层对NCM811正极材料与硫化物电解质界面稳定性的改善效果。通过ALD和溶液法两种包覆工艺的对比研究，确定了最优包覆厚度(5-10nm)和工艺参数，使界面阻抗降低了60%以上。',
-    department: '材料研发部',
-  },
-  {
-    id: '6',
-    name: 'LLZO陶瓷电解质烧结参数研究.pdf',
-    type: 'pdf',
-    size: '5.7 MB',
-    createdAt: '2024-09-30',
-    author: '周博士',
-    tags: ['LLZO', '氧化物', '烧结工艺'],
-    summary: '系统研究了Li₇La₃Zr₂O₁₂(LLZO)石榴石型电解质的烧结温度、保温时间、气氛对致密度和离子电导率的影响。通过引入少量Al和Ta掺杂，成功将室温离子电导率提升至1.2 mS/cm，为大规模生产提供了工艺指导。',
-    department: '电解质研发部',
+    id: 'projects',
+    name: '02_项目协作空间',
+    type: 'folder',
+    badge: '跨部门',
+    badgeColor: 'green',
+    children: [
+      {
+        id: 'project-01',
+        name: 'Proj_2025_硫化物量产攻关',
+        type: 'folder',
+        children: [],
+      },
+      {
+        id: 'project-02',
+        name: 'Proj_2025_无负极技术验证',
+        type: 'folder',
+        children: [],
+      },
+      {
+        id: 'project-03',
+        name: 'Proj_2024_LLZO陶瓷电解质',
+        type: 'folder',
+        children: [],
+      },
+    ],
   },
 ];
 
@@ -113,73 +193,65 @@ export const documents: Document[] = [
 export const intelligences: Intelligence[] = [
   {
     id: '1',
-    title: '全固态锂电池高电导率硫化物电解质研究进展',
+    title: '全固态电池硫化物电解质的空气稳定性研究',
     source: 'Nature Energy',
     type: 'paper',
-    tags: ['硫化物', '电解质', '综述'],
-    publishedAt: '2024-12-10',
-    abstract: '本综述系统总结了近五年来硫化物固态电解质的研究进展，重点分析了Li₆PS₅X (X=Cl, Br, I)和Li₁₀GeP₂S₁₂体系的结构-性能关系。讨论了提高离子电导率的掺杂策略和降低界面阻抗的表面改性方法，并展望了实用化面临的关键挑战。',
+    tags: ['硫化物', '空气稳定性', 'Li₆PS₅Cl'],
+    publishedAt: '2025',
+    abstract: '本研究系统分析了硫化物固态电解质在不同湿度条件下的化学稳定性，并提出了一种新型表面改性策略，可将空气暴露耐受时间延长至48小时以上。',
     authors: ['Wang, Y.', 'Zhang, H.', 'Li, M.'],
   },
   {
     id: '2',
-    title: '专利：一种用于固态电池的复合正极包覆方法',
-    source: 'CNIPA',
+    title: '一种用于抑制锂枝晶的复合负极保护层',
+    source: 'USPTO',
     type: 'patent',
-    tags: ['正极包覆', '复合材料', '工艺专利'],
-    publishedAt: '2024-11-25',
-    abstract: '本发明公开了一种固态电池复合正极的多层包覆方法。通过先采用溶液法形成离子导体内层，再通过ALD沉积电子绝缘外层的双层包覆策略，有效抑制了正极与电解质之间的副反应，显著提升了电池的循环寿命。',
-    patentNumber: 'CN2024123456789A',
+    tags: ['锂枝晶', '负极保护', '界面改性'],
+    publishedAt: '2025',
+    abstract: '本发明公开了一种由有机-无机复合材料构成的锂金属负极保护层，可有效抑制锂枝晶生长，使全固态电池循环寿命提升3倍以上。',
+    patentNumber: 'US2025/0123456',
+    status: '授权中',
   },
   {
     id: '3',
-    title: '锂金属负极界面稳定性的原位电化学研究',
+    title: '氧化物固态电解质的低温烧结新工艺',
     source: 'Science',
     type: 'paper',
-    tags: ['锂金属', '界面', '原位表征'],
-    publishedAt: '2024-12-05',
-    abstract: '采用原位透射电子显微镜和原位X射线技术，首次实时观察了锂金属在固态电解质界面的沉积和溶解行为。发现锂沉积优先发生在电解质晶界处，并揭示了锂枝晶穿透电解质的微观机制，为设计更安全的固态电池提供了关键见解。',
-    authors: ['Chen, X.', 'Liu, W.', 'Park, J.'],
+    tags: ['氧化物', 'LLZO', '低温烧结'],
+    publishedAt: '2024',
+    abstract: '采用闪速烧结技术，成功将LLZO电解质的致密化温度从1200°C降至800°C，同时保持1.2 mS/cm的高离子电导率。',
+    authors: ['Chen, X.', 'Liu, W.'],
   },
   {
     id: '4',
-    title: '专利：一种干法电极制造工艺及设备',
-    source: 'CNIPA',
-    type: 'patent',
-    tags: ['干法工艺', '电极制造', '设备专利'],
-    publishedAt: '2024-10-18',
-    abstract: '本发明涉及一种无溶剂的干法电极制造工艺，通过高剪切混合和热压成型制备固态电池电极片。该工艺可避免溶剂残留对电解质的影响，同时大幅降低能耗和生产成本，适用于大规模连续化生产。',
-    patentNumber: 'CN2024987654321A',
+    title: '高通量筛选方法加速固态电池材料发现',
+    source: 'Nature Materials',
+    type: 'paper',
+    tags: ['高通量', '材料筛选', 'AI'],
+    publishedAt: '2024',
+    abstract: '结合机器学习与自动化实验平台，建立了固态电解质高通量筛选体系，材料发现效率提升100倍。',
+    authors: ['Park, J.', 'Kim, S.'],
   },
   {
     id: '5',
-    title: '硅基负极在固态电池中的应用研究',
-    source: 'Advanced Energy Materials',
-    type: 'paper',
-    tags: ['硅负极', '体积膨胀', '固态电池'],
-    publishedAt: '2024-11-30',
-    abstract: '研究了纳米硅/碳复合负极在硫化物全固态电池中的电化学性能。发现固态电解质可有效约束硅的体积膨胀，实现了超过500次循环的稳定容量保持。同时分析了外加压力对电极结构稳定性的影响规律。',
-    authors: ['Kim, S.', 'Tanaka, K.', 'Smith, R.'],
+    title: '一种固态电池干法电极制造工艺',
+    source: 'CNIPA',
+    type: 'patent',
+    tags: ['干法工艺', '电极制造', '降本'],
+    publishedAt: '2024',
+    abstract: '无溶剂干法电极制备技术，生产能耗降低60%，适用于大规模连续化生产。',
+    patentNumber: 'CN2024123456789A',
+    status: '已授权',
   },
   {
     id: '6',
-    title: '专利：一种固态电池热管理系统',
-    source: 'USPTO',
-    type: 'patent',
-    tags: ['热管理', '电池系统', '安全'],
-    publishedAt: '2024-12-01',
-    abstract: '本发明公开了一种针对固态电池组的智能热管理系统。通过分布式温度传感器阵列和预测性控制算法，可实现电池组温度的精确控制，确保固态电池在最佳温度窗口内工作，提高能量效率和使用寿命。',
-    patentNumber: 'US2024/0123456',
-  },
-  {
-    id: '7',
-    title: '聚合物-无机复合电解质的设计策略',
-    source: 'Nature Materials',
+    title: '硅基负极在全固态电池中的循环稳定性机理',
+    source: 'Advanced Energy Materials',
     type: 'paper',
-    tags: ['复合电解质', '聚合物', '无机填料'],
-    publishedAt: '2024-11-20',
-    abstract: '综述了聚合物基体与无机填料复合固态电解质的最新进展。分析了不同类型无机填料(氧化物、硫化物、卤化物)与聚合物的协同效应，讨论了复合电解质中离子传输机制和界面相容性问题。',
-    authors: ['Lee, J.', 'Wang, Q.', 'Brown, T.'],
+    tags: ['硅负极', '体积膨胀', '固态电解质'],
+    publishedAt: '2024',
+    abstract: '研究发现固态电解质的机械约束可有效抑制硅负极的体积膨胀，实现500次以上的稳定循环。',
+    authors: ['Tanaka, K.', 'Smith, R.'],
   },
 ];
 
@@ -189,14 +261,14 @@ export const activities: Activity[] = [
     id: '1',
     type: 'document',
     action: '上传',
-    target: '2024_Q4_硫化物电解质稳定性测试报告.pdf',
+    target: 'LPSC_502批次_XRD图谱分析.pdf',
     timestamp: '10 分钟前',
   },
   {
     id: '2',
     type: 'intelligence',
     action: '收录',
-    target: '全固态锂电池高电导率硫化物电解质研究进展',
+    target: '全固态电池硫化物电解质的空气稳定性研究',
     timestamp: '30 分钟前',
   },
   {
@@ -210,99 +282,102 @@ export const activities: Activity[] = [
     id: '4',
     type: 'document',
     action: '更新',
-    target: '无负极金属锂沉积工艺_SOP_v2.docx',
+    target: '硫化物电解质_电导率测试报告_2025Q4.xlsx',
     timestamp: '2 小时前',
   },
   {
     id: '5',
     type: 'intelligence',
     action: '收录',
-    target: '专利：一种用于固态电池的复合正极包覆方法',
+    target: '一种用于抑制锂枝晶的复合负极保护层',
     timestamp: '3 小时前',
-  },
-  {
-    id: '6',
-    type: 'ai',
-    action: '分析',
-    target: '宁德时代固态电池专利趋势',
-    timestamp: '昨天',
   },
 ];
 
 // AI Simulated Responses
 export const aiResponses: Record<string, string> = {
-  'LLZO': `## LLZO 锆酸镧锂的最新改性研究总结
+  'LPSC': `## Dept_01 关于 LPSC 合成的最新 SOP
 
-### 研究热点方向
+### 文档信息
+- **文档名称**: LPSC_Li₆PS₅Cl_标准合成工艺_v3.2
+- **更新日期**: 2025-01-15
+- **编写人**: 张博士 (无机电解质部)
 
-**1. 元素掺杂改性**
-- **Al掺杂**: 最常用的稳定立方相策略，0.2-0.3 mol Al可将离子电导率提升至10⁻⁴ S/cm
-- **Ta/Nb掺杂**: 在Zr位掺杂，可进一步提高电导率至10⁻³ S/cm级别
-- **Ga掺杂**: 新兴研究方向，有助于降低烧结温度
+### 工艺流程概述
 
-**2. 烧结工艺优化**
-- 热压烧结可获得>98%致密度
-- 闪烧技术(Flash sintering)可在数秒内完成致密化
-- 气氛控制(O₂/N₂)对Li挥发有显著影响
+**1. 原料准备**
+- Li₂S (99.9%, 预干燥 200°C/12h)
+- P₂S₅ (99%, 手套箱内称量)
+- LiCl (99.9%, 研磨过筛)
+- 摩尔比: Li₂S : P₂S₅ : LiCl = 5 : 1 : 2
 
-**3. 界面工程**
-- 原位形成Li₃N中间层改善与锂金属兼容性
-- 聚合物缓冲层降低界面阻抗
-- 3D结构设计增大有效接触面积
+**2. 球磨混合**
+- 设备: Fritsch P7 行星式球磨机
+- 球料比: 30:1 (ZrO₂球)
+- 转速: 500 rpm
+- 时间: 20h (正反交替，5min/次)
 
-### 最新突破
-2024年Nature Energy报道的Ga-LLZO在25°C下实现1.5 mS/cm电导率，是目前氧化物电解质的最高水平。`,
+**3. 热处理**
+- 温度: 550°C
+- 时间: 5h
+- 气氛: 高纯 Ar (O₂ < 0.1 ppm)
 
-  '硅基负极': `## 硅基负极膨胀数据对比报告
+**4. 质量检测**
+- XRD确认纯相
+- EIS测定离子电导率 (目标: >2 mS/cm)
+- ICP确认元素配比`,
 
-### 不同硅基材料体积变化对比
+  '成本趋势': `## 硫化物 vs 氧化物电解质成本趋势对比
 
-| 材料类型 | 理论容量 (mAh/g) | 体积膨胀率 | 首效 | 循环稳定性 |
-|---------|-----------------|-----------|------|-----------|
-| 纯硅 | 4200 | ~300% | 75-80% | 差 (<50次) |
-| 硅/碳复合 | 1500-2500 | 100-150% | 85-88% | 中等 (200次) |
-| 硅氧化物 SiOₓ | 1800-2200 | 120-160% | 70-75% | 良好 (300次) |
-| 纳米硅@碳 | 2000-2800 | 80-120% | 88-92% | 良好 (400次) |
-| 多孔硅 | 3000-3500 | 60-100% | 82-85% | 优秀 (500次) |
+### 2024-2025 成本变化分析
 
-### 固态电池中的表现
-在固态电解质体系中，由于电解质的机械约束作用，硅基负极的体积膨胀得到有效抑制：
-- 硫化物电解质体系：膨胀率降低40-60%
-- 外加压力(5-10 MPa)可进一步改善电极完整性
-- 推荐采用预锂化策略补偿首次不可逆容量损失`,
+| 材料体系 | 2024 成本 ($/kg) | 2025 成本 ($/kg) | 变化率 |
+|---------|-----------------|-----------------|-------|
+| Li₆PS₅Cl (硫化物) | 850 | 620 | -27% |
+| LGPS (硫化物) | 1,200 | 950 | -21% |
+| LLZO (氧化物) | 450 | 380 | -16% |
+| LATP (氧化物) | 280 | 240 | -14% |
 
-  '宁德时代': `## 宁德时代固态电池最新专利分析
+### 关键洞察
 
-### 2024年重点专利布局
+**硫化物电解质**
+- 成本下降主要得益于 Li₂S 原料国产化
+- 预计 2026 年可降至 400$/kg 以下
+- 大规模生产工艺成熟度提升
 
-**1. 硫化物电解质体系 (23项)**
-- CN2024XXXXXX1: Li₆PS₅Cl电解质的低成本制备方法
-- CN2024XXXXXX2: 硫化物电解质与正极的界面改性层
-- CN2024XXXXXX3: 抗潮湿硫化物电解质复合材料
+**氧化物电解质**
+- 成本相对稳定，降幅有限
+- La、Zr 原料价格波动影响较大
+- 烧结能耗仍是主要成本瓶颈
 
-**2. 氧化物电解质体系 (15项)**
-- CN2024XXXXXX4: LLZO薄膜的快速烧结技术
-- CN2024XXXXXX5: 氧化物-聚合物复合电解质
+### 预测
+2027年硫化物电解质成本有望与氧化物持平，届时性能优势将推动其大规模商用。`,
 
-**3. 电池结构设计 (18项)**
-- CN2024XXXXXX6: 双极性固态电池堆叠结构
-- CN2024XXXXXX7: 三明治式固态电池封装方案
+  '预算': `## 2025 Q4 部门预算消耗报表
 
-**4. 制造工艺 (12项)**
-- CN2024XXXXXX8: 干法电极连续化生产线
-- CN2024XXXXXX9: 固态电池自动化组装系统
+### Dept_01_无机电解质部
 
-### 技术趋势判断
-- 宁德时代正在同步推进硫化物和氧化物两条技术路线
-- 半固态电池(凝胶电解质)作为过渡方案已进入量产准备
-- 预计2026年前实现小批量全固态电池产品交付`,
+| 预算类别 | 年度预算 | Q4 已消耗 | 剩余 | 消耗率 |
+|---------|---------|---------|-----|-------|
+| 原材料采购 | ¥2,400,000 | ¥580,000 | ¥1,820,000 | 24.2% |
+| 设备维护 | ¥800,000 | ¥210,000 | ¥590,000 | 26.3% |
+| 测试外包 | ¥600,000 | ¥145,000 | ¥455,000 | 24.2% |
+| 差旅会议 | ¥200,000 | ¥62,000 | ¥138,000 | 31.0% |
+| 其他 | ¥100,000 | ¥28,000 | ¥72,000 | 28.0% |
 
-  'default': `感谢您的问题！作为固态电池研发AI助手，我可以帮您：
+### 总计
+- **年度总预算**: ¥4,100,000
+- **Q4 已消耗**: ¥1,025,000 (25.0%)
+- **预计年末结余**: ¥3,075,000
 
-1. **文献检索与综述** - 搜索并总结特定主题的最新研究进展
-2. **数据分析** - 对比不同材料体系的性能参数
-3. **专利分析** - 追踪竞争对手的技术布局
-4. **实验建议** - 基于已有数据提供实验设计建议
+### 备注
+Q4 原材料采购包含进口 Li₂S 一批 (¥320,000)，已到货。`,
 
-请提供更具体的问题，我将为您生成详细的分析报告。您也可以点击上方的快捷提示快速开始。`,
+  'default': `您好！我是固态电池研发 AI 助手。我可以帮您：
+
+1. **检索内部文档** - 查询各部门的 SOP、测试报告等
+2. **分析外部情报** - 对比论文数据、追踪专利动态
+3. **生成报表** - 预算分析、成本趋势等
+
+请告诉我您需要什么帮助？您也可以点击上方的快捷提示开始。`,
 };

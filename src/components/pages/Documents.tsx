@@ -1,203 +1,300 @@
 import { useState } from 'react';
-import { FileText, FileSpreadsheet, Presentation, Search, Calendar, User, Tag, X } from 'lucide-react';
-import { documents, Document } from '@/data/mockData';
+import { 
+  Folder, 
+  FileText, 
+  FileSpreadsheet, 
+  FileType, 
+  ChevronRight, 
+  ChevronLeft,
+  Lock,
+  Globe,
+  Building2,
+  Users,
+  Clock,
+  User,
+  HardDrive
+} from 'lucide-react';
+import { rootSpaces, FolderItem } from '@/data/mockData';
 import { cn } from '@/lib/utils';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
-const getFileIcon = (type: Document['type']) => {
+const getFileIcon = (type: string, isLocked?: boolean) => {
+  if (type === 'folder') {
+    if (isLocked) {
+      return { icon: Lock, bgColor: 'bg-red-50', iconColor: 'text-red-500' };
+    }
+    return { icon: Folder, bgColor: 'bg-amber-50', iconColor: 'text-amber-500' };
+  }
   switch (type) {
     case 'pdf':
-      return { icon: FileText, color: 'bg-red-100 text-red-600' };
-    case 'docx':
-      return { icon: FileText, color: 'bg-blue-100 text-blue-600' };
+      return { icon: FileText, bgColor: 'bg-red-50', iconColor: 'text-red-500' };
     case 'xlsx':
-      return { icon: FileSpreadsheet, color: 'bg-green-100 text-green-600' };
+      return { icon: FileSpreadsheet, bgColor: 'bg-green-50', iconColor: 'text-green-600' };
+    case 'docx':
+      return { icon: FileType, bgColor: 'bg-blue-50', iconColor: 'text-blue-600' };
     case 'pptx':
-      return { icon: Presentation, color: 'bg-orange-100 text-orange-600' };
+      return { icon: FileText, bgColor: 'bg-orange-50', iconColor: 'text-orange-500' };
     default:
-      return { icon: FileText, color: 'bg-gray-100 text-gray-600' };
+      return { icon: FileText, bgColor: 'bg-muted', iconColor: 'text-muted-foreground' };
   }
 };
 
-const getFileTypeLabel = (type: Document['type']) => {
-  switch (type) {
-    case 'pdf': return 'PDF 文档';
-    case 'docx': return 'Word 文档';
-    case 'xlsx': return 'Excel 表格';
-    case 'pptx': return 'PPT 演示';
-    default: return '文档';
+const getRootIcon = (id: string) => {
+  switch (id) {
+    case 'public':
+      return Globe;
+    case 'departments':
+      return Building2;
+    case 'projects':
+      return Users;
+    default:
+      return Folder;
   }
 };
+
+const getBadgeColor = (color?: string) => {
+  switch (color) {
+    case 'blue':
+      return 'bg-blue-100 text-blue-700';
+    case 'amber':
+      return 'bg-amber-100 text-amber-700';
+    case 'green':
+      return 'bg-green-100 text-green-700';
+    default:
+      return 'bg-muted text-muted-foreground';
+  }
+};
+
+interface BreadcrumbItem {
+  id: string;
+  name: string;
+}
 
 export function Documents() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
+  const [currentPath, setCurrentPath] = useState<BreadcrumbItem[]>([]);
+  const [currentItems, setCurrentItems] = useState<FolderItem[]>(rootSpaces);
 
-  const filteredDocuments = documents.filter(doc =>
-    doc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    doc.tags.some(tag => tag.includes(searchQuery))
-  );
+  const navigateToFolder = (item: FolderItem) => {
+    if (item.type !== 'folder' || item.isLocked) return;
+    
+    if (item.children && item.children.length > 0) {
+      setCurrentPath([...currentPath, { id: item.id, name: item.name }]);
+      setCurrentItems(item.children);
+    }
+  };
+
+  const navigateBack = () => {
+    if (currentPath.length === 0) return;
+    
+    const newPath = currentPath.slice(0, -1);
+    setCurrentPath(newPath);
+    
+    // Navigate back through the tree
+    let items = rootSpaces;
+    for (const crumb of newPath) {
+      const folder = items.find(i => i.id === crumb.id);
+      if (folder?.children) {
+        items = folder.children;
+      }
+    }
+    setCurrentItems(items);
+  };
+
+  const navigateToBreadcrumb = (index: number) => {
+    if (index === -1) {
+      setCurrentPath([]);
+      setCurrentItems(rootSpaces);
+      return;
+    }
+    
+    const newPath = currentPath.slice(0, index + 1);
+    setCurrentPath(newPath);
+    
+    let items = rootSpaces;
+    for (const crumb of newPath) {
+      const folder = items.find(i => i.id === crumb.id);
+      if (folder?.children) {
+        items = folder.children;
+      }
+    }
+    setCurrentItems(items);
+  };
+
+  const isRootLevel = currentPath.length === 0;
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-semibold text-foreground">内部文档</h1>
-        <p className="text-muted-foreground mt-1">管理和检索研发相关的内部资料</p>
+        <h1 className="text-2xl font-semibold text-foreground tracking-tight">内部文档</h1>
+        <p className="text-muted-foreground mt-1 text-sm">三层空间体系 · 分级权限管理</p>
       </div>
 
-      {/* Search Bar */}
-      <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-        <input
-          type="text"
-          placeholder="搜索文档名称或标签..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full h-14 pl-12 pr-4 bg-card rounded-2xl border border-border/50 shadow-apple focus:shadow-apple-lg focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-foreground placeholder:text-muted-foreground"
-        />
+      {/* Breadcrumb Navigation */}
+      <div className="flex items-center gap-2">
+        {currentPath.length > 0 && (
+          <button
+            onClick={navigateBack}
+            className="p-2 rounded-lg hover:bg-accent/50 transition-colors"
+          >
+            <ChevronLeft className="w-4 h-4 text-muted-foreground" />
+          </button>
+        )}
+        
+        <div className="flex items-center gap-1 text-sm">
+          <button
+            onClick={() => navigateToBreadcrumb(-1)}
+            className={cn(
+              'px-2 py-1 rounded-md transition-colors',
+              isRootLevel 
+                ? 'text-foreground font-medium' 
+                : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+            )}
+          >
+            根目录
+          </button>
+          
+          {currentPath.map((crumb, index) => (
+            <div key={crumb.id} className="flex items-center gap-1">
+              <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50" />
+              <button
+                onClick={() => navigateToBreadcrumb(index)}
+                className={cn(
+                  'px-2 py-1 rounded-md transition-colors max-w-[200px] truncate',
+                  index === currentPath.length - 1
+                    ? 'text-foreground font-medium'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                )}
+              >
+                {crumb.name}
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* Document Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 stagger-children">
-        {filteredDocuments.map((doc) => {
-          const { icon: Icon, color } = getFileIcon(doc.type);
+      {/* Content Grid */}
+      <div className={cn(
+        'grid gap-3',
+        isRootLevel ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
+      )}>
+        {currentItems.map((item) => {
+          const isFolder = item.type === 'folder';
+          const isRoot = isRootLevel;
+          const { icon: Icon, bgColor, iconColor } = getFileIcon(item.type, item.isLocked);
+          const RootIcon = isRoot ? getRootIcon(item.id) : Icon;
+          
           return (
             <button
-              key={doc.id}
-              onClick={() => setSelectedDocument(doc)}
-              className="bg-card rounded-2xl p-5 shadow-apple hover:shadow-apple-lg transition-all duration-300 border border-border/50 text-left group hover:scale-[1.02]"
+              key={item.id}
+              onClick={() => navigateToFolder(item)}
+              disabled={item.isLocked}
+              className={cn(
+                'group text-left transition-all duration-200',
+                isRoot 
+                  ? 'bg-card rounded-2xl p-6 border border-border/40 shadow-sm hover:shadow-md hover:border-border/60 hover:scale-[1.01]'
+                  : 'bg-card rounded-xl p-4 border border-border/30 hover:bg-accent/30 hover:border-border/50',
+                item.isLocked && 'opacity-60 cursor-not-allowed'
+              )}
             >
-              <div className="flex items-start gap-4">
-                <div className={cn('w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0', color)}>
-                  <Icon className="w-6 h-6" />
+              {isRoot ? (
+                // Root level cards - larger style
+                <div className="space-y-4">
+                  <div className="flex items-start justify-between">
+                    <div className={cn(
+                      'w-12 h-12 rounded-xl flex items-center justify-center',
+                      item.id === 'public' && 'bg-blue-100',
+                      item.id === 'departments' && 'bg-amber-100',
+                      item.id === 'projects' && 'bg-green-100'
+                    )}>
+                      <RootIcon className={cn(
+                        'w-6 h-6',
+                        item.id === 'public' && 'text-blue-600',
+                        item.id === 'departments' && 'text-amber-600',
+                        item.id === 'projects' && 'text-green-600'
+                      )} />
+                    </div>
+                    {item.badge && (
+                      <span className={cn(
+                        'text-xs font-medium px-2.5 py-1 rounded-full',
+                        getBadgeColor(item.badgeColor)
+                      )}>
+                        {item.badge}
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-foreground group-hover:text-primary transition-colors">
+                      {item.name}
+                    </h3>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {item.children?.length || 0} 个子文件夹
+                    </p>
+                  </div>
+                  <div className="flex items-center text-muted-foreground">
+                    <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-medium text-foreground text-sm leading-snug line-clamp-2 group-hover:text-primary transition-colors">
-                    {doc.name}
-                  </h3>
-                  <p className="text-xs text-muted-foreground mt-2">{doc.size}</p>
+              ) : (
+                // Nested level - compact style
+                <div className="flex items-start gap-3">
+                  <div className={cn(
+                    'w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0',
+                    bgColor
+                  )}>
+                    <Icon className={cn('w-5 h-5', iconColor)} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className={cn(
+                      'text-sm font-medium text-foreground truncate',
+                      isFolder && !item.isLocked && 'group-hover:text-primary'
+                    )}>
+                      {item.name}
+                    </h3>
+                    {item.isLocked ? (
+                      <p className="text-xs text-red-500 mt-0.5">需要管理员权限</p>
+                    ) : isFolder ? (
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {item.children?.length || 0} 个项目
+                      </p>
+                    ) : (
+                      <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                        {item.size && (
+                          <span className="flex items-center gap-1">
+                            <HardDrive className="w-3 h-3" />
+                            {item.size}
+                          </span>
+                        )}
+                        {item.updatedAgo && (
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {item.updatedAgo}
+                          </span>
+                        )}
+                        {item.author && (
+                          <span className="flex items-center gap-1">
+                            <User className="w-3 h-3" />
+                            {item.author}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-              <div className="flex flex-wrap gap-1.5 mt-4">
-                {doc.tags.slice(0, 2).map((tag) => (
-                  <span
-                    key={tag}
-                    className="text-xs px-2 py-1 rounded-full bg-accent text-accent-foreground"
-                  >
-                    {tag}
-                  </span>
-                ))}
-                {doc.tags.length > 2 && (
-                  <span className="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground">
-                    +{doc.tags.length - 2}
-                  </span>
-                )}
-              </div>
+              )}
             </button>
           );
         })}
       </div>
 
-      {/* Document Detail Modal */}
-      <Dialog open={!!selectedDocument} onOpenChange={() => setSelectedDocument(null)}>
-        <DialogContent className="max-w-2xl bg-card border-border/50 shadow-apple-xl rounded-3xl p-0 overflow-hidden">
-          {selectedDocument && (
-            <>
-              {/* Header */}
-              <div className="p-6 border-b border-border/50">
-                <DialogHeader>
-                  <div className="flex items-start gap-4">
-                    <div className={cn(
-                      'w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0',
-                      getFileIcon(selectedDocument.type).color
-                    )}>
-                      {(() => {
-                        const { icon: Icon } = getFileIcon(selectedDocument.type);
-                        return <Icon className="w-7 h-7" />;
-                      })()}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <DialogTitle className="text-lg font-semibold text-foreground leading-snug">
-                        {selectedDocument.name}
-                      </DialogTitle>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {getFileTypeLabel(selectedDocument.type)} · {selectedDocument.size}
-                      </p>
-                    </div>
-                  </div>
-                </DialogHeader>
-              </div>
-
-              {/* Content */}
-              <div className="p-6 space-y-6">
-                {/* Meta Info */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex items-center gap-3 p-3 rounded-xl bg-accent/50">
-                    <User className="w-4 h-4 text-muted-foreground" />
-                    <div>
-                      <p className="text-xs text-muted-foreground">创建者</p>
-                      <p className="text-sm font-medium text-foreground">{selectedDocument.author}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 rounded-xl bg-accent/50">
-                    <Calendar className="w-4 h-4 text-muted-foreground" />
-                    <div>
-                      <p className="text-xs text-muted-foreground">创建日期</p>
-                      <p className="text-sm font-medium text-foreground">{selectedDocument.createdAt}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Department */}
-                <div className="p-4 rounded-xl bg-accent/30 border border-border/50">
-                  <p className="text-xs text-muted-foreground mb-1">所属部门</p>
-                  <p className="text-sm font-medium text-foreground">{selectedDocument.department}</p>
-                </div>
-
-                {/* Tags */}
-                <div>
-                  <div className="flex items-center gap-2 mb-3">
-                    <Tag className="w-4 h-4 text-muted-foreground" />
-                    <p className="text-sm font-medium text-foreground">标签</p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedDocument.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Summary */}
-                <div>
-                  <p className="text-sm font-medium text-foreground mb-3">文档摘要</p>
-                  <p className="text-sm text-muted-foreground leading-relaxed bg-accent/30 p-4 rounded-xl border border-border/50">
-                    {selectedDocument.summary}
-                  </p>
-                </div>
-              </div>
-
-              {/* Footer Actions */}
-              <div className="p-6 border-t border-border/50 flex gap-3">
-                <button className="flex-1 h-12 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors">
-                  下载文档
-                </button>
-                <button
-                  onClick={() => setSelectedDocument(null)}
-                  className="h-12 px-6 bg-accent text-accent-foreground rounded-xl font-medium hover:bg-accent/80 transition-colors"
-                >
-                  关闭
-                </button>
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Empty State */}
+      {currentItems.length === 0 && (
+        <div className="text-center py-16">
+          <div className="w-16 h-16 rounded-2xl bg-accent/50 mx-auto flex items-center justify-center mb-4">
+            <Folder className="w-8 h-8 text-muted-foreground" />
+          </div>
+          <p className="text-muted-foreground">此文件夹为空</p>
+        </div>
+      )}
     </div>
   );
 }

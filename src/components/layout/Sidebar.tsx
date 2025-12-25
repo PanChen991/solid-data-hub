@@ -1,4 +1,4 @@
-import { Home, FileText, Globe, Bot, Sparkles } from 'lucide-react';
+import { Home, FolderOpen, Globe, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface SidebarProps {
@@ -8,29 +8,29 @@ interface SidebarProps {
 
 const menuItems = [
   { id: 'dashboard', label: '概览', icon: Home },
-  { id: 'documents', label: '内部文档', icon: FileText },
+  { id: 'documents', label: '内部文档', icon: FolderOpen },
   { id: 'intelligence', label: '外部情报', icon: Globe },
-  { id: 'assistant', label: 'AI 助手', icon: Bot },
+  { id: 'assistant', label: 'AI 助手', icon: Sparkles },
 ];
 
 export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
   return (
-    <aside className="fixed left-0 top-0 h-full w-64 bg-white/75 backdrop-blur-xl border-r border-border/50 z-50">
+    <aside className="fixed left-0 top-0 h-full w-64 bg-white/70 backdrop-blur-xl border-r border-border/30 z-50 flex flex-col">
       {/* Logo */}
-      <div className="p-6 border-b border-border/50">
+      <div className="p-5 border-b border-border/30">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-apple">
-            <Sparkles className="w-5 h-5 text-primary-foreground" />
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center shadow-lg shadow-primary/25">
+            <span className="text-lg font-bold text-white">S</span>
           </div>
           <div>
-            <h1 className="text-lg font-semibold text-foreground">SSB-KMS</h1>
-            <p className="text-xs text-muted-foreground">固态研发</p>
+            <h1 className="text-base font-semibold text-foreground tracking-tight">SSB-KMS</h1>
+            <p className="text-xs text-muted-foreground">固态研发平台</p>
           </div>
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="p-4 space-y-1">
+      <nav className="flex-1 p-3 space-y-1">
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive = currentPage === item.id;
@@ -40,28 +40,31 @@ export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
               key={item.id}
               onClick={() => onNavigate(item.id)}
               className={cn(
-                'w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200',
+                'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all duration-200',
                 isActive
-                  ? 'bg-primary text-primary-foreground shadow-apple'
-                  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                  ? 'bg-primary/10 text-primary font-medium'
+                  : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
               )}
             >
-              <Icon className="w-5 h-5" />
-              <span className="font-medium">{item.label}</span>
+              <Icon className={cn('w-[18px] h-[18px]', isActive && 'text-primary')} />
+              <span className="text-sm">{item.label}</span>
+              {item.id === 'documents' && isActive && (
+                <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />
+              )}
             </button>
           );
         })}
       </nav>
 
-      {/* Footer */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border/50">
-        <div className="flex items-center gap-3 px-4 py-2">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-accent to-primary/20 flex items-center justify-center">
-            <span className="text-sm font-medium text-primary">研</span>
+      {/* User Profile */}
+      <div className="p-3 border-t border-border/30">
+        <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-accent/50 transition-colors cursor-pointer">
+          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center shadow-sm">
+            <span className="text-sm font-medium text-white">李</span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-foreground truncate">研发团队</p>
-            <p className="text-xs text-muted-foreground">固态电池实验室</p>
+            <p className="text-sm font-medium text-foreground">Dr. Li</p>
+            <p className="text-xs text-muted-foreground truncate">电解质部</p>
           </div>
         </div>
       </div>
