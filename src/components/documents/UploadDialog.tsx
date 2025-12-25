@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react';
-import { X, Upload, FileText, FileSpreadsheet, FileType, Trash2, CheckCircle2 } from 'lucide-react';
+import { useState, useCallback, useEffect } from 'react';
+import { Upload, FileText, FileSpreadsheet, FileType, Trash2, CheckCircle2, Info, Folder, Lock, Building2, Users, Globe } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { ParentPermission } from './NewFolderDialog';
 
 interface UploadFile {
   id: string;
@@ -27,6 +28,7 @@ interface UploadDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   currentPath: string;
+  parentPermission?: ParentPermission;
 }
 
 const getFileIcon = (fileName: string) => {
@@ -51,10 +53,38 @@ const formatFileSize = (bytes: number) => {
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 };
 
-export function UploadDialog({ open, onOpenChange, currentPath }: UploadDialogProps) {
+const getPermissionIcon = (type: string) => {
+  switch (type) {
+    case 'private': return Lock;
+    case 'department': return Building2;
+    case 'project': return Users;
+    case 'all': return Globe;
+    default: return Folder;
+  }
+};
+
+const getPermissionColor = (type: string) => {
+  switch (type) {
+    case 'private': return { bg: 'bg-red-50', text: 'text-red-500', border: 'border-red-200' };
+    case 'department': return { bg: 'bg-amber-50', text: 'text-amber-500', border: 'border-amber-200' };
+    case 'project': return { bg: 'bg-green-50', text: 'text-green-500', border: 'border-green-200' };
+    case 'all': return { bg: 'bg-blue-50', text: 'text-blue-500', border: 'border-blue-200' };
+    default: return { bg: 'bg-muted', text: 'text-muted-foreground', border: 'border-border' };
+  }
+};
+
+export function UploadDialog({ open, onOpenChange, currentPath, parentPermission }: UploadDialogProps) {
   const [files, setFiles] = useState<UploadFile[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
   const [permission, setPermission] = useState('inherit');
+
+  // Reset when dialog opens
+  useEffect(() => {
+    if (open) {
+      setFiles([]);
+      setPermission('inherit');
+    }
+  }, [open]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -133,6 +163,9 @@ export function UploadDialog({ open, onOpenChange, currentPath }: UploadDialogPr
   const allComplete = files.length > 0 && files.every(f => f.status === 'complete');
   const hasPending = files.some(f => f.status === 'pending');
 
+  const ParentIcon = parentPermission ? getPermissionIcon(parentPermission.type) : Folder;
+  const parentColors = parentPermission ? getPermissionColor(parentPermission.type) : getPermissionColor('inherit');
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[520px] bg-card/95 backdrop-blur-xl border-border/50">
@@ -148,6 +181,26 @@ export function UploadDialog({ open, onOpenChange, currentPath }: UploadDialogPr
               {currentPath || '根目录'}
             </span>
           </div>
+
+          {/* Parent Folder Permission Info */}
+          {parentPermission && (
+            <div className={cn(
+              'flex items-start gap-3 p-3 rounded-lg border',
+              parentColors.bg,
+              parentColors.border
+            )}>
+              <Info className={cn('w-4 h-4 mt-0.5 flex-shrink-0', parentColors.text)} />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground">父文件夹权限</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <ParentIcon className={cn('w-4 h-4', parentColors.text)} />
+                  <span className="text-sm text-muted-foreground">
+                    {parentPermission.label} · {parentPermission.description}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Drop Zone */}
           <div
@@ -239,7 +292,9 @@ export function UploadDialog({ open, onOpenChange, currentPath }: UploadDialogPr
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="inherit">继承父文件夹</SelectItem>
+                <SelectItem value="inherit">
+                  继承父文件夹 {parentPermission && `(${parentPermission.label})`}
+                </SelectItem>
                 <SelectItem value="private">仅自己可见</SelectItem>
                 <SelectItem value="department">部门可见</SelectItem>
                 <SelectItem value="all">全员可见</SelectItem>
