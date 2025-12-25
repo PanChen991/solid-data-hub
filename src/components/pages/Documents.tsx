@@ -20,7 +20,8 @@ import {
   Upload,
   Download,
   Pencil,
-  Trash2
+  Trash2,
+  FolderPlus
 } from 'lucide-react';
 import { rootSpaces, FolderItem } from '@/data/mockData';
 import { cn } from '@/lib/utils';
@@ -31,6 +32,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { UploadDialog } from '@/components/documents/UploadDialog';
+import { NewFolderDialog } from '@/components/documents/NewFolderDialog';
 
 const getFileIcon = (type: string, isLocked?: boolean) => {
   if (type === 'folder') {
@@ -91,6 +94,8 @@ export function Documents() {
   const [currentItems, setCurrentItems] = useState<FolderItem[]>(rootSpaces);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [isDragOver, setIsDragOver] = useState(false);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [newFolderDialogOpen, setNewFolderDialogOpen] = useState(false);
 
   const isRootLevel = currentPath.length === 0;
   const isLevel2 = currentPath.length === 1;
@@ -173,9 +178,24 @@ export function Documents() {
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
-    // Mock upload - in real app, handle file upload here
-    console.log('Files dropped:', e.dataTransfer.files);
+    // Open upload dialog with dropped files
+    setUploadDialogOpen(true);
   };
+
+  const handleCreateFolder = (name: string, permission: string) => {
+    // Mock create folder - in real app, create folder here
+    console.log('Creating folder:', name, 'with permission:', permission);
+    // Add new folder to current items (mock)
+    const newFolder: FolderItem = {
+      id: `folder-${Date.now()}`,
+      name,
+      type: 'folder',
+      children: [],
+    };
+    setCurrentItems(prev => [newFolder, ...prev]);
+  };
+
+  const currentPathString = currentPath.map(p => p.name).join(' / ');
 
   return (
     <div className="space-y-6">
@@ -262,8 +282,19 @@ export function Documents() {
             </div>
           )}
 
+          {/* New Folder Button */}
+          <Button 
+            variant="outline"
+            onClick={() => setNewFolderDialogOpen(true)}
+            className="rounded-full px-4 gap-2 border-border/60 hover:bg-accent/50"
+          >
+            <FolderPlus className="w-4 h-4" />
+            新建文件夹
+          </Button>
+
           {/* Upload Button */}
           <Button 
+            onClick={() => setUploadDialogOpen(true)}
             className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-4 gap-2 shadow-md hover:shadow-lg transition-all duration-200"
           >
             <Plus className="w-4 h-4" />
@@ -271,6 +302,19 @@ export function Documents() {
           </Button>
         </div>
       </div>
+
+      {/* Dialogs */}
+      <UploadDialog 
+        open={uploadDialogOpen} 
+        onOpenChange={setUploadDialogOpen}
+        currentPath={currentPathString}
+      />
+      <NewFolderDialog 
+        open={newFolderDialogOpen} 
+        onOpenChange={setNewFolderDialogOpen}
+        currentPath={currentPathString}
+        onCreate={handleCreateFolder}
+      />
 
       {/* Content Area */}
       {currentItems.length === 0 ? (
