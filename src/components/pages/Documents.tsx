@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { 
   Folder, 
   FileText, 
@@ -21,11 +21,14 @@ import {
   Download,
   Pencil,
   Trash2,
-  FolderPlus
+  FolderPlus,
+  Eye,
+  Check
 } from 'lucide-react';
 import { rootSpaces, FolderItem } from '@/data/mockData';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,7 +36,12 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { UploadDialog } from '@/components/documents/UploadDialog';
-import { NewFolderDialog } from '@/components/documents/NewFolderDialog';
+import { NewFolderDialog, ParentPermission } from '@/components/documents/NewFolderDialog';
+import { FilePreviewDialog } from '@/components/documents/FilePreviewDialog';
+import { SearchBar, SearchFilters } from '@/components/documents/SearchBar';
+import { BatchActions } from '@/components/documents/BatchActions';
+import { MoveDialog } from '@/components/documents/MoveDialog';
+import { toast } from 'sonner';
 
 const getFileIcon = (type: string, isLocked?: boolean) => {
   if (type === 'folder') {
@@ -82,6 +90,26 @@ const getBadgeColor = (color?: string) => {
   }
 };
 
+// Get parent permission based on current path
+const getParentPermission = (path: BreadcrumbItem[]): ParentPermission | undefined => {
+  if (path.length === 0) {
+    return undefined; // Root level - no parent
+  }
+  
+  // Determine permission based on root space
+  const rootId = path[0]?.id;
+  switch (rootId) {
+    case 'public':
+      return { type: 'all', label: '全员可见', description: '所有人可访问' };
+    case 'departments':
+      return { type: 'department', label: '部门可见', description: '本部门成员可访问' };
+    case 'projects':
+      return { type: 'project', label: '项目组可见', description: '项目成员可访问' };
+    default:
+      return { type: 'inherit', label: '继承上级', description: '与上级目录权限一致' };
+  }
+};
+
 interface BreadcrumbItem {
   id: string;
   name: string;
@@ -96,15 +124,24 @@ export function Documents() {
   const [isDragOver, setIsDragOver] = useState(false);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [newFolderDialogOpen, setNewFolderDialogOpen] = useState(false);
+  const [previewFile, setPreviewFile] = useState<FolderItem | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+  const [searchActive, setSearchActive] = useState(false);
+  const [filteredItems, setFilteredItems] = useState<FolderItem[] | null>(null);
+  const [moveDialogOpen, setMoveDialogOpen] = useState(false);
 
   const isRootLevel = currentPath.length === 0;
   const isLevel2 = currentPath.length === 1;
   const isLevel3 = currentPath.length >= 2;
   
+  const displayItems = filteredItems ?? currentItems;
+  const parentPermission = getParentPermission(currentPath);
+  
   // Check if current folder contains files (not just folders)
   const hasFiles = useMemo(() => {
-    return currentItems.some(item => item.type !== 'folder');
-  }, [currentItems]);
+    return displayItems.some(item => item.type !== 'folder');
+  }, [displayItems]);
 
   // Auto-switch view mode based on level
   const effectiveViewMode = useMemo(() => {
@@ -183,9 +220,7 @@ export function Documents() {
   };
 
   const handleCreateFolder = (name: string, permission: string) => {
-    // Mock create folder - in real app, create folder here
     console.log('Creating folder:', name, 'with permission:', permission);
-    // Add new folder to current items (mock)
     const newFolder: FolderItem = {
       id: `folder-${Date.now()}`,
       name,
@@ -193,6 +228,60 @@ export function Documents() {
       children: [],
     };
     setCurrentItems(prev => [newFolder, ...prev]);
+    toast.success(`文件夹 "${name}" 创建成功`);
+  };
+
+  const handleSearch = useCallback((filters: SearchFilters) => {
+    if (!filters.query && filters.types.length === 0 && filters.authors.length === 0) {
+      setFilteredItems(null);
+      setSearchActive(false);
+      return;
+    }
+    
+    setSearchActive(true);
+    const filtered = currentItems.filter(item => {
+      const matchesQuery = !filters.query || item.name.toLowerCase().includes(filters.query.toLowerCase());
+      const matchesType = filters.types.length === 0 || filters.types.includes(item.type);
+      const matchesAuthor = filters.authors.length === 0 || (item.author && filters.authors.includes(item.author));
+      return matchesQuery && matchesType && matchesAuthor;
+    });
+    setFilteredItems(filtered);
+  }, [currentItems]);
+
+  const handleClearSearch = () => {
+    setFilteredItems(null);
+    setSearchActive(false);
+  };
+
+  const toggleSelection = (id: string) => {
+    setSelectedItems(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleBatchDownload = () => {
+    toast.success(`正在下载 ${selectedItems.size} 个文件...`);
+    setSelectedItems(new Set());
+  };
+
+  const handleBatchDelete = () => {
+    toast.success(`已删除 ${selectedItems.size} 个项目`);
+    setSelectedItems(new Set());
+  };
+
+  const handleBatchMove = (targetPath: string) => {
+    toast.success(`已移动 ${selectedItems.size} 个项目`);
+    setSelectedItems(new Set());
+  };
+
+  const handlePreviewFile = (item: FolderItem) => {
+    if (item.type !== 'folder') {
+      setPreviewFile(item);
+      setPreviewOpen(true);
+    }
   };
 
   const currentPathString = currentPath.map(p => p.name).join(' / ');
@@ -204,6 +293,11 @@ export function Documents() {
         <h1 className="text-2xl font-semibold text-foreground tracking-tight">内部文档</h1>
         <p className="text-muted-foreground mt-1 text-sm">三层空间体系 · 分级权限管理</p>
       </div>
+
+      {/* Search Bar - only show at Level 3 */}
+      {isLevel3 && (
+        <SearchBar onSearch={handleSearch} onClear={handleClearSearch} isActive={searchActive} />
+      )}
 
       {/* Action Bar */}
       <div className="flex items-center justify-between gap-4 bg-card/60 backdrop-blur-xl rounded-xl px-4 py-3 border border-border/40">
@@ -251,6 +345,52 @@ export function Documents() {
         </div>
 
         {/* Right: Actions */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {isLevel3 && hasFiles && (
+            <div className="flex items-center bg-muted/50 rounded-lg p-0.5">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={cn(
+                  'p-2 rounded-md transition-all duration-200',
+                  viewMode === 'grid' 
+                    ? 'bg-background shadow-sm text-foreground' 
+                    : 'text-muted-foreground hover:text-foreground'
+                )}
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={cn(
+                  'p-2 rounded-md transition-all duration-200',
+                  viewMode === 'list' 
+                    ? 'bg-background shadow-sm text-foreground' 
+                    : 'text-muted-foreground hover:text-foreground'
+                )}
+              >
+                <List className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
+          <Button variant="outline" onClick={() => setNewFolderDialogOpen(true)} className="rounded-full px-4 gap-2">
+            <FolderPlus className="w-4 h-4" />
+            新建文件夹
+          </Button>
+
+          <Button onClick={() => setUploadDialogOpen(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-4 gap-2 shadow-md">
+            <Plus className="w-4 h-4" />
+            上传文件
+          </Button>
+        </div>
+      </div>
+
+      {/* Dialogs */}
+      <UploadDialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen} currentPath={currentPathString} parentPermission={parentPermission} />
+      <NewFolderDialog open={newFolderDialogOpen} onOpenChange={setNewFolderDialogOpen} currentPath={currentPathString} onCreate={handleCreateFolder} parentPermission={parentPermission} />
+      <FilePreviewDialog open={previewOpen} onOpenChange={setPreviewOpen} file={previewFile} />
+      <MoveDialog open={moveDialogOpen} onOpenChange={setMoveDialogOpen} selectedCount={selectedItems.size} onMove={handleBatchMove} />
+      <BatchActions selectedCount={selectedItems.size} onDownload={handleBatchDownload} onMove={() => setMoveDialogOpen(true)} onDelete={handleBatchDelete} onClear={() => setSelectedItems(new Set())} />
         <div className="flex items-center gap-2 flex-shrink-0">
           {/* View Toggle - only show at Level 3 with files */}
           {isLevel3 && hasFiles && (

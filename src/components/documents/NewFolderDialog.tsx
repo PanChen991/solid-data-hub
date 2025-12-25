@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Folder, Lock, Users, Building2, Globe } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Folder, Lock, Users, Building2, Globe, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,11 +19,18 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
+export interface ParentPermission {
+  type: 'all' | 'department' | 'project' | 'private' | 'inherit';
+  label: string;
+  description: string;
+}
+
 interface NewFolderDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   currentPath: string;
   onCreate: (name: string, permission: string) => void;
+  parentPermission?: ParentPermission;
 }
 
 const permissionOptions = [
@@ -34,10 +41,39 @@ const permissionOptions = [
   { value: 'all', label: '全员可见', icon: Globe, description: '所有人可访问' },
 ];
 
-export function NewFolderDialog({ open, onOpenChange, currentPath, onCreate }: NewFolderDialogProps) {
+const getPermissionIcon = (type: string) => {
+  switch (type) {
+    case 'private': return Lock;
+    case 'department': return Building2;
+    case 'project': return Users;
+    case 'all': return Globe;
+    default: return Folder;
+  }
+};
+
+const getPermissionColor = (type: string) => {
+  switch (type) {
+    case 'private': return { bg: 'bg-red-50', text: 'text-red-500', border: 'border-red-200' };
+    case 'department': return { bg: 'bg-amber-50', text: 'text-amber-500', border: 'border-amber-200' };
+    case 'project': return { bg: 'bg-green-50', text: 'text-green-500', border: 'border-green-200' };
+    case 'all': return { bg: 'bg-blue-50', text: 'text-blue-500', border: 'border-blue-200' };
+    default: return { bg: 'bg-muted', text: 'text-muted-foreground', border: 'border-border' };
+  }
+};
+
+export function NewFolderDialog({ open, onOpenChange, currentPath, onCreate, parentPermission }: NewFolderDialogProps) {
   const [folderName, setFolderName] = useState('');
   const [permission, setPermission] = useState('inherit');
   const [error, setError] = useState('');
+
+  // Reset when dialog opens
+  useEffect(() => {
+    if (open) {
+      setFolderName('');
+      setPermission('inherit');
+      setError('');
+    }
+  }, [open]);
 
   const handleCreate = () => {
     if (!folderName.trim()) {
@@ -64,6 +100,8 @@ export function NewFolderDialog({ open, onOpenChange, currentPath, onCreate }: N
   };
 
   const selectedPermission = permissionOptions.find(p => p.value === permission);
+  const ParentIcon = parentPermission ? getPermissionIcon(parentPermission.type) : Folder;
+  const parentColors = parentPermission ? getPermissionColor(parentPermission.type) : getPermissionColor('inherit');
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -81,6 +119,26 @@ export function NewFolderDialog({ open, onOpenChange, currentPath, onCreate }: N
         </DialogHeader>
 
         <div className="space-y-5 mt-4">
+          {/* Parent Folder Permission Info */}
+          {parentPermission && (
+            <div className={cn(
+              'flex items-start gap-3 p-3 rounded-lg border',
+              parentColors.bg,
+              parentColors.border
+            )}>
+              <Info className={cn('w-4 h-4 mt-0.5 flex-shrink-0', parentColors.text)} />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground">父文件夹权限</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <ParentIcon className={cn('w-4 h-4', parentColors.text)} />
+                  <span className="text-sm text-muted-foreground">
+                    {parentPermission.label} · {parentPermission.description}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Folder Name Input */}
           <div className="space-y-2">
             <Label htmlFor="folder-name" className="text-sm font-medium">
@@ -136,7 +194,7 @@ export function NewFolderDialog({ open, onOpenChange, currentPath, onCreate }: N
             </Select>
           </div>
 
-          {/* Permission Preview */}
+          {/* Permission Preview - Show inherited permission info when "inherit" is selected */}
           {selectedPermission && (
             <div className="flex items-center gap-3 p-3 bg-accent/30 rounded-lg">
               <div className={cn(
@@ -156,7 +214,11 @@ export function NewFolderDialog({ open, onOpenChange, currentPath, onCreate }: N
               </div>
               <div>
                 <p className="text-sm font-medium text-foreground">{selectedPermission.label}</p>
-                <p className="text-xs text-muted-foreground">{selectedPermission.description}</p>
+                <p className="text-xs text-muted-foreground">
+                  {permission === 'inherit' && parentPermission 
+                    ? `将继承: ${parentPermission.label}` 
+                    : selectedPermission.description}
+                </p>
               </div>
             </div>
           )}
