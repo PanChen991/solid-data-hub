@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Search, BookOpen, FileCheck, Calendar, ExternalLink, Users } from 'lucide-react';
-import { intelligences, Intelligence } from '@/data/mockData';
+import { intelligences } from '@/data/mockData';
 import { cn } from '@/lib/utils';
 
 export function IntelligencePage() {
@@ -19,19 +19,19 @@ export function IntelligencePage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-semibold text-foreground">外部情报</h1>
-        <p className="text-muted-foreground mt-1">追踪前沿论文与专利动态</p>
+        <h1 className="text-2xl font-semibold text-foreground tracking-tight">外部情报</h1>
+        <p className="text-muted-foreground mt-1 text-sm">追踪前沿论文与专利动态</p>
       </div>
 
       {/* Search Bar - Apple Style */}
       <div className="relative">
-        <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-6 h-6 text-muted-foreground" />
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
         <input
           type="text"
-          placeholder="搜索论文或专利..."
+          placeholder="搜索 Nature/Science 论文或专利..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full h-16 pl-14 pr-6 bg-card rounded-2xl border border-border/50 shadow-apple-lg focus:shadow-apple-xl focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-lg text-foreground placeholder:text-muted-foreground"
+          className="w-full h-14 pl-12 pr-4 bg-white/70 backdrop-blur-lg rounded-2xl border border-border/30 shadow-sm focus:shadow-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all text-foreground placeholder:text-muted-foreground"
         />
       </div>
 
@@ -46,10 +46,10 @@ export function IntelligencePage() {
             key={tab.id}
             onClick={() => setFilter(tab.id as typeof filter)}
             className={cn(
-              'px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200',
+              'px-4 py-2 rounded-full text-sm font-medium transition-all duration-200',
               filter === tab.id
-                ? 'bg-primary text-primary-foreground shadow-apple'
-                : 'bg-accent text-accent-foreground hover:bg-accent/80'
+                ? 'bg-foreground text-background'
+                : 'bg-accent/50 text-muted-foreground hover:bg-accent hover:text-foreground'
             )}
           >
             {tab.label}
@@ -57,71 +57,74 @@ export function IntelligencePage() {
         ))}
       </div>
 
-      {/* Intelligence Feed */}
-      <div className="space-y-4 stagger-children">
+      {/* Masonry-style Cards */}
+      <div className="columns-1 md:columns-2 lg:columns-3 gap-4 space-y-4">
         {filteredIntelligences.map((item) => (
           <div
             key={item.id}
-            className="bg-card rounded-2xl p-6 shadow-apple hover:shadow-apple-lg transition-all duration-300 border border-border/50 group cursor-pointer hover:scale-[1.01]"
+            className="break-inside-avoid bg-card rounded-2xl p-5 border border-border/30 hover:border-border/50 hover:shadow-md transition-all duration-200 cursor-pointer group"
           >
-            <div className="flex items-start gap-4">
-              {/* Type Icon */}
+            {/* Type Badge */}
+            <div className="flex items-center gap-2 mb-3">
               <div className={cn(
-                'w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0',
-                item.type === 'paper' ? 'bg-purple-100 text-purple-600' : 'bg-amber-100 text-amber-600'
+                'w-8 h-8 rounded-lg flex items-center justify-center',
+                item.type === 'paper' ? 'bg-purple-100' : 'bg-amber-100'
               )}>
                 {item.type === 'paper' ? (
-                  <BookOpen className="w-6 h-6" />
+                  <BookOpen className={cn('w-4 h-4', item.type === 'paper' ? 'text-purple-600' : 'text-amber-600')} />
                 ) : (
-                  <FileCheck className="w-6 h-6" />
+                  <FileCheck className="w-4 h-4 text-amber-600" />
                 )}
               </div>
+              <span className={cn(
+                'text-xs font-medium',
+                item.type === 'paper' ? 'text-purple-600' : 'text-amber-600'
+              )}>
+                {item.source}
+              </span>
+              {item.status && (
+                <span className="text-xs text-muted-foreground bg-accent/50 px-2 py-0.5 rounded-full">
+                  {item.status}
+                </span>
+              )}
+              <ExternalLink className="w-3.5 h-3.5 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
 
-              {/* Content */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between gap-4">
-                  <h3 className="font-semibold text-foreground leading-snug group-hover:text-primary transition-colors">
-                    {item.title}
-                  </h3>
-                  <ExternalLink className="w-5 h-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
-                </div>
+            {/* Title */}
+            <h3 className="font-medium text-foreground leading-snug mb-3 group-hover:text-primary transition-colors">
+              {item.title}
+            </h3>
 
-                {/* Meta */}
-                <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                  <span className="font-medium text-primary/80">{item.source}</span>
-                  <span className="flex items-center gap-1">
-                    <Calendar className="w-4 h-4" />
-                    {item.publishedAt}
-                  </span>
-                  {item.authors && (
-                    <span className="flex items-center gap-1">
-                      <Users className="w-4 h-4" />
-                      {item.authors.slice(0, 2).join(', ')}
-                      {item.authors.length > 2 && ` 等`}
-                    </span>
-                  )}
-                  {item.patentNumber && (
-                    <span className="font-mono text-xs">{item.patentNumber}</span>
-                  )}
-                </div>
+            {/* Meta */}
+            <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
+              <span className="flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5" />
+                {item.publishedAt}
+              </span>
+              {item.authors && (
+                <span className="flex items-center gap-1">
+                  <Users className="w-3.5 h-3.5" />
+                  {item.authors.slice(0, 2).join(', ')}
+                  {item.authors.length > 2 && ' 等'}
+                </span>
+              )}
+            </div>
 
-                {/* Abstract */}
-                <p className="text-sm text-muted-foreground mt-3 line-clamp-2 leading-relaxed">
-                  {item.abstract}
-                </p>
+            {/* Abstract */}
+            <p className="text-sm text-muted-foreground leading-relaxed mb-4 line-clamp-3">
+              {item.abstract}
+            </p>
 
-                {/* Tags */}
-                <div className="flex flex-wrap gap-2 mt-4">
-                  {item.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="text-xs px-2.5 py-1 rounded-full bg-accent text-accent-foreground"
-                    >
-                      #{tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
+            {/* Tags */}
+            <div className="flex flex-wrap gap-1.5">
+              {item.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="text-xs px-2 py-0.5 rounded-full bg-accent/50 text-muted-foreground"
+                >
+                  #{tag}
+                </span>
+              ))}
             </div>
           </div>
         ))}
@@ -129,7 +132,7 @@ export function IntelligencePage() {
 
       {filteredIntelligences.length === 0 && (
         <div className="text-center py-16">
-          <div className="w-16 h-16 rounded-2xl bg-accent mx-auto flex items-center justify-center mb-4">
+          <div className="w-16 h-16 rounded-2xl bg-accent/50 mx-auto flex items-center justify-center mb-4">
             <Search className="w-8 h-8 text-muted-foreground" />
           </div>
           <p className="text-muted-foreground">未找到匹配的结果</p>
