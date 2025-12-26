@@ -447,10 +447,9 @@ export function Documents() {
               return (
                 <div 
                   key={item.id}
-                  onClick={() => navigateToFolder(item)}
+                  onClick={() => isFolder ? navigateToFolder(item) : handlePreviewFile(item)}
                   className={cn(
-                    'grid grid-cols-[1fr_140px_80px_100px_48px] gap-4 px-4 py-3 items-center transition-colors',
-                    isFolder && !item.isLocked && 'cursor-pointer',
+                    'grid grid-cols-[1fr_140px_80px_100px_48px] gap-4 px-4 py-3 items-center transition-colors cursor-pointer',
                     'hover:bg-accent/30',
                     item.isLocked && 'opacity-60'
                   )}
@@ -539,7 +538,7 @@ export function Documents() {
             return (
               <button
                 key={item.id}
-                onClick={() => navigateToFolder(item)}
+                onClick={() => isFolder ? navigateToFolder(item) : handlePreviewFile(item)}
                 disabled={item.isLocked}
                 className={cn(
                   'group text-left transition-all duration-200',

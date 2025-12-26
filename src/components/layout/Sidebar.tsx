@@ -1,5 +1,6 @@
 import { Home, FolderOpen, Globe, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import gotionLogo from '@/assets/gotion-logo.png';
 
 interface SidebarProps {
   currentPage: string;
@@ -19,12 +20,10 @@ export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
       {/* Logo */}
       <div className="p-5 border-b border-border/30">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center shadow-lg shadow-primary/25">
-            <span className="text-lg font-bold text-white">S</span>
-          </div>
+          <img src={gotionLogo} alt="国轩高科" className="h-10 w-auto" />
           <div>
-            <h1 className="text-base font-semibold text-foreground tracking-tight">SSB-KMS</h1>
-            <p className="text-xs text-muted-foreground">固态研发平台</p>
+            <h1 className="text-sm font-semibold text-foreground tracking-tight leading-tight">固态电池知识库</h1>
+            <p className="text-xs text-muted-foreground">管理平台</p>
           </div>
         </div>
       </div>
