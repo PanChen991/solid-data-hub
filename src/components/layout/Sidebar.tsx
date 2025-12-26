@@ -19,12 +19,9 @@ export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
     <aside className="fixed left-0 top-0 h-full w-64 bg-white/70 backdrop-blur-xl border-r border-border/30 z-50 flex flex-col">
       {/* Logo */}
       <div className="p-5 border-b border-border/30">
-        <div className="flex items-center gap-3">
-          <img src={gotionLogo} alt="国轩高科" className="h-10 w-auto" />
-          <div>
-            <h1 className="text-sm font-semibold text-foreground tracking-tight leading-tight">固态电池知识库</h1>
-            <p className="text-xs text-muted-foreground">管理平台</p>
-          </div>
+        <div className="flex flex-col items-center gap-2">
+          <img src={gotionLogo} alt="国轩高科" className="h-12 w-auto" />
+          <h1 className="text-sm font-semibold text-foreground tracking-tight text-center">固态电池知识库管理平台</h1>
         </div>
       </div>
 
