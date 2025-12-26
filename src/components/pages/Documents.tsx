@@ -232,8 +232,8 @@ export function Documents() {
     setUploadDialogOpen(true);
   };
 
-  const handleCreateFolder = (name: string, permission: string) => {
-    console.log('Creating folder:', name, 'with permission:', permission);
+  const handleCreateFolder = (name: string, permission: string, adminIds?: string[]) => {
+    console.log('Creating folder:', name, 'with permission:', permission, 'admins:', adminIds);
     const newFolder: FolderItem = {
       id: `folder-${Date.now()}`,
       name,
@@ -241,8 +241,19 @@ export function Documents() {
       children: [],
     };
     setCurrentItems(prev => [newFolder, ...prev]);
-    toast.success(`文件夹 "${name}" 创建成功`);
+    const adminCount = adminIds?.length || 0;
+    toast.success(`文件夹 "${name}" 创建成功`, {
+      description: adminCount > 0 ? `已添加 ${adminCount} 名管理员` : undefined,
+    });
   };
+
+  // Determine if we're at first level of a space (for admin selection)
+  const isFirstLevelFolder = currentPath.length === 1;
+  const currentSpaceType = currentPath.length >= 1 
+    ? (currentPath[0]?.id === 'projects' ? 'projects' : 
+       currentPath[0]?.id === 'departments' ? 'departments' : 
+       currentPath[0]?.id === 'public' ? 'public' : undefined)
+    : undefined;
 
   const handleSearch = useCallback((filters: SearchFilters) => {
     if (!filters.query && filters.types.length === 0 && filters.authors.length === 0) {
@@ -429,7 +440,15 @@ export function Documents() {
 
       {/* Dialogs */}
       <UploadDialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen} currentPath={currentPathString} parentPermission={parentPermission} />
-      <NewFolderDialog open={newFolderDialogOpen} onOpenChange={setNewFolderDialogOpen} currentPath={currentPathString} onCreate={handleCreateFolder} parentPermission={parentPermission} />
+      <NewFolderDialog 
+        open={newFolderDialogOpen} 
+        onOpenChange={setNewFolderDialogOpen} 
+        currentPath={currentPathString} 
+        onCreate={handleCreateFolder} 
+        parentPermission={parentPermission}
+        isFirstLevel={isFirstLevelFolder}
+        spaceType={currentSpaceType}
+      />
       <FilePreviewDialog open={previewOpen} onOpenChange={setPreviewOpen} file={previewFile} />
       <MoveDialog open={moveDialogOpen} onOpenChange={setMoveDialogOpen} selectedCount={selectedItems.size} onMove={handleBatchMove} />
       <RenameDialog 
