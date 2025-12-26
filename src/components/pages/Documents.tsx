@@ -38,6 +38,7 @@ import {
 import { UploadDialog } from '@/components/documents/UploadDialog';
 import { NewFolderDialog, ParentPermission } from '@/components/documents/NewFolderDialog';
 import { FilePreviewDialog } from '@/components/documents/FilePreviewDialog';
+import { RenameDialog } from '@/components/documents/RenameDialog';
 import { SearchBar, SearchFilters } from '@/components/documents/SearchBar';
 import { BatchActions } from '@/components/documents/BatchActions';
 import { MoveDialog } from '@/components/documents/MoveDialog';
@@ -130,6 +131,8 @@ export function Documents() {
   const [searchActive, setSearchActive] = useState(false);
   const [filteredItems, setFilteredItems] = useState<FolderItem[] | null>(null);
   const [moveDialogOpen, setMoveDialogOpen] = useState(false);
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
+  const [itemToRename, setItemToRename] = useState<FolderItem | null>(null);
 
   const isRootLevel = currentPath.length === 0;
   const isLevel2 = currentPath.length === 1;
@@ -277,6 +280,24 @@ export function Documents() {
     setSelectedItems(new Set());
   };
 
+  const handleOpenRename = (item: FolderItem) => {
+    setItemToRename(item);
+    setRenameDialogOpen(true);
+  };
+
+  const handleRename = (newName: string) => {
+    if (!itemToRename) return;
+    setCurrentItems(prev => 
+      prev.map(item => 
+        item.id === itemToRename.id 
+          ? { ...item, name: newName }
+          : item
+      )
+    );
+    toast.success(`已重命名为 "${newName}"`);
+    setItemToRename(null);
+  };
+
   const handlePreviewFile = (item: FolderItem) => {
     if (item.type !== 'folder') {
       // 使用浏览器原生预览，在新窗口打开文件
@@ -401,6 +422,13 @@ export function Documents() {
       <NewFolderDialog open={newFolderDialogOpen} onOpenChange={setNewFolderDialogOpen} currentPath={currentPathString} onCreate={handleCreateFolder} parentPermission={parentPermission} />
       <FilePreviewDialog open={previewOpen} onOpenChange={setPreviewOpen} file={previewFile} />
       <MoveDialog open={moveDialogOpen} onOpenChange={setMoveDialogOpen} selectedCount={selectedItems.size} onMove={handleBatchMove} />
+      <RenameDialog 
+        open={renameDialogOpen} 
+        onOpenChange={setRenameDialogOpen} 
+        currentName={itemToRename?.name || ''} 
+        itemType={itemToRename?.type === 'folder' ? 'folder' : 'file'}
+        onRename={handleRename}
+      />
       <BatchActions selectedCount={selectedItems.size} onDownload={handleBatchDownload} onMove={() => setMoveDialogOpen(true)} onDelete={handleBatchDelete} onClear={() => setSelectedItems(new Set())} />
 
       {/* Content Area */}
@@ -512,7 +540,10 @@ export function Documents() {
                           <Download className="w-4 h-4" />
                           下载
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="gap-2 cursor-pointer">
+                        <DropdownMenuItem 
+                          className="gap-2 cursor-pointer"
+                          onClick={() => handleOpenRename(item)}
+                        >
                           <Pencil className="w-4 h-4" />
                           重命名
                         </DropdownMenuItem>
