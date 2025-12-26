@@ -578,104 +578,142 @@ export function Documents() {
             const RootIcon = isRoot ? getRootIcon(item.id) : Icon;
             
             return (
-              <button
+              <div
                 key={item.id}
-                onClick={() => isFolder ? navigateToFolder(item) : handlePreviewFile(item)}
-                disabled={item.isLocked}
                 className={cn(
-                  'group text-left transition-all duration-200',
+                  'group relative text-left transition-all duration-200',
                   isRoot 
                     ? 'bg-card rounded-2xl p-6 border border-border/40 shadow-sm hover:shadow-md hover:border-border/60 hover:scale-[1.01]'
                     : 'bg-card rounded-xl p-4 border border-border/30 hover:bg-accent/30 hover:border-border/50',
                   item.isLocked && 'opacity-60 cursor-not-allowed'
                 )}
               >
-                {isRoot ? (
-                  // Root level cards - larger style
-                  <div className="space-y-4">
-                    <div className="flex items-start justify-between">
-                      <div className={cn(
-                        'w-12 h-12 rounded-xl flex items-center justify-center',
-                        item.id === 'public' && 'bg-blue-100',
-                        item.id === 'departments' && 'bg-amber-100',
-                        item.id === 'projects' && 'bg-green-100'
-                      )}>
-                        <RootIcon className={cn(
-                          'w-6 h-6',
-                          item.id === 'public' && 'text-blue-600',
-                          item.id === 'departments' && 'text-amber-600',
-                          item.id === 'projects' && 'text-green-600'
-                        )} />
-                      </div>
-                      {item.badge && (
-                        <span className={cn(
-                          'text-xs font-medium px-2.5 py-1 rounded-full',
-                          getBadgeColor(item.badgeColor)
-                        )}>
-                          {item.badge}
-                        </span>
-                      )}
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-foreground group-hover:text-primary transition-colors">
-                        {item.name}
-                      </h3>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {item.children?.length || 0} 个子文件夹
-                      </p>
-                    </div>
-                    <div className="flex items-center text-muted-foreground">
-                      <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-                    </div>
-                  </div>
-                ) : (
-                  // Nested level - compact style
-                  <div className="flex items-start gap-3">
-                    <div className={cn(
-                      'w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0',
-                      bgColor
-                    )}>
-                      <Icon className={cn('w-5 h-5', iconColor)} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className={cn(
-                        'text-sm font-medium text-foreground truncate',
-                        isFolder && !item.isLocked && 'group-hover:text-primary'
-                      )}>
-                        {item.name}
-                      </h3>
-                      {item.isLocked ? (
-                        <p className="text-xs text-red-500 mt-0.5">需要管理员权限</p>
-                      ) : isFolder ? (
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {item.children?.length || 0} 个项目
-                        </p>
-                      ) : (
-                        <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                          {item.size && (
-                            <span className="flex items-center gap-1">
-                              <HardDrive className="w-3 h-3" />
-                              {item.size}
-                            </span>
-                          )}
-                          {item.updatedAgo && (
-                            <span className="flex items-center gap-1">
-                              <Clock className="w-3 h-3" />
-                              {item.updatedAgo}
-                            </span>
-                          )}
-                          {item.author && (
-                            <span className="flex items-center gap-1">
-                              <User className="w-3 h-3" />
-                              {item.author}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </div>
+                {/* Action Menu - Top Right */}
+                {!item.isLocked && (
+                  <div 
+                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="p-1.5 rounded-md bg-background/80 hover:bg-accent/50 transition-colors text-muted-foreground hover:text-foreground shadow-sm">
+                          <MoreHorizontal className="w-4 h-4" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-40">
+                        <DropdownMenuItem 
+                          className="gap-2 cursor-pointer"
+                          onClick={() => handleOpenRename(item)}
+                        >
+                          <Pencil className="w-4 h-4" />
+                          重命名
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="gap-2 cursor-pointer">
+                          <Download className="w-4 h-4" />
+                          下载
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="gap-2 cursor-pointer text-destructive focus:text-destructive">
+                          <Trash2 className="w-4 h-4" />
+                          删除
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 )}
-              </button>
+
+                {/* Clickable Content */}
+                <button
+                  onClick={() => isFolder ? navigateToFolder(item) : handlePreviewFile(item)}
+                  disabled={item.isLocked}
+                  className="w-full text-left"
+                >
+                  {isRoot ? (
+                    // Root level cards - larger style
+                    <div className="space-y-4">
+                      <div className="flex items-start justify-between">
+                        <div className={cn(
+                          'w-12 h-12 rounded-xl flex items-center justify-center',
+                          item.id === 'public' && 'bg-blue-100',
+                          item.id === 'departments' && 'bg-amber-100',
+                          item.id === 'projects' && 'bg-green-100'
+                        )}>
+                          <RootIcon className={cn(
+                            'w-6 h-6',
+                            item.id === 'public' && 'text-blue-600',
+                            item.id === 'departments' && 'text-amber-600',
+                            item.id === 'projects' && 'text-green-600'
+                          )} />
+                        </div>
+                        {item.badge && (
+                          <span className={cn(
+                            'text-xs font-medium px-2.5 py-1 rounded-full',
+                            getBadgeColor(item.badgeColor)
+                          )}>
+                            {item.badge}
+                          </span>
+                        )}
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-foreground group-hover:text-primary transition-colors">
+                          {item.name}
+                        </h3>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {item.children?.length || 0} 个子文件夹
+                        </p>
+                      </div>
+                      <div className="flex items-center text-muted-foreground">
+                        <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                      </div>
+                    </div>
+                  ) : (
+                    // Nested level - compact style
+                    <div className="flex items-start gap-3">
+                      <div className={cn(
+                        'w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0',
+                        bgColor
+                      )}>
+                        <Icon className={cn('w-5 h-5', iconColor)} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className={cn(
+                          'text-sm font-medium text-foreground truncate',
+                          isFolder && !item.isLocked && 'group-hover:text-primary'
+                        )}>
+                          {item.name}
+                        </h3>
+                        {item.isLocked ? (
+                          <p className="text-xs text-red-500 mt-0.5">需要管理员权限</p>
+                        ) : isFolder ? (
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {item.children?.length || 0} 个项目
+                          </p>
+                        ) : (
+                          <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                            {item.size && (
+                              <span className="flex items-center gap-1">
+                                <HardDrive className="w-3 h-3" />
+                                {item.size}
+                              </span>
+                            )}
+                            {item.updatedAgo && (
+                              <span className="flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                {item.updatedAgo}
+                              </span>
+                            )}
+                            {item.author && (
+                              <span className="flex items-center gap-1">
+                                <User className="w-3 h-3" />
+                                {item.author}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </button>
+              </div>
             );
           })}
         </div>
