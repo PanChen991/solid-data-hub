@@ -141,8 +141,12 @@ export function Documents() {
   
   // Check if we're in a project space (for showing member management)
   const isInProjectSpace = currentPath.length >= 1 && currentPath[0]?.id === 'projects';
+  // Show member management at project level (when inside a specific project folder)
   const currentProjectId = isInProjectSpace && currentPath.length >= 2 ? currentPath[1]?.id : null;
   const currentProjectName = isInProjectSpace && currentPath.length >= 2 ? currentPath[1]?.name : null;
+  
+  // Also detect if we're viewing the list of projects (to show settings on each project card)
+  const isViewingProjectsList = currentPath.length === 1 && currentPath[0]?.id === 'projects';
   
   const displayItems = filteredItems ?? currentItems;
   const parentPermission = getParentPermission(currentPath);
@@ -162,15 +166,15 @@ export function Documents() {
   const navigateToFolder = (item: FolderItem) => {
     if (item.type !== 'folder' || item.isLocked) return;
     
-    if (item.children && item.children.length > 0) {
-      setCurrentPath([...currentPath, { id: item.id, name: item.name }]);
-      setCurrentItems(item.children);
-      // Auto-switch to list view when entering Level 3 with files
-      if (currentPath.length >= 1) {
-        const hasFilesInChildren = item.children.some(child => child.type !== 'folder');
-        if (hasFilesInChildren) {
-          setViewMode('list');
-        }
+    // Allow navigation even if children is empty (for project folders)
+    setCurrentPath([...currentPath, { id: item.id, name: item.name }]);
+    setCurrentItems(item.children || []);
+    
+    // Auto-switch to list view when entering Level 3 with files
+    if (currentPath.length >= 1 && item.children) {
+      const hasFilesInChildren = item.children.some(child => child.type !== 'folder');
+      if (hasFilesInChildren) {
+        setViewMode('list');
       }
     }
   };
