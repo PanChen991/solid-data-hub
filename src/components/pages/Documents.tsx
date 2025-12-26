@@ -42,6 +42,7 @@ import { RenameDialog } from '@/components/documents/RenameDialog';
 import { SearchBar, SearchFilters } from '@/components/documents/SearchBar';
 import { BatchActions } from '@/components/documents/BatchActions';
 import { MoveDialog } from '@/components/documents/MoveDialog';
+import { ProjectSettingsCard } from '@/components/documents/ProjectSettingsCard';
 import { toast } from 'sonner';
 
 const getFileIcon = (type: string, isLocked?: boolean) => {
@@ -137,6 +138,11 @@ export function Documents() {
   const isRootLevel = currentPath.length === 0;
   const isLevel2 = currentPath.length === 1;
   const isLevel3 = currentPath.length >= 2;
+  
+  // Check if we're in a project space (for showing member management)
+  const isInProjectSpace = currentPath.length >= 1 && currentPath[0]?.id === 'projects';
+  const currentProjectId = isInProjectSpace && currentPath.length >= 2 ? currentPath[1]?.id : null;
+  const currentProjectName = isInProjectSpace && currentPath.length >= 2 ? currentPath[1]?.name : null;
   
   const displayItems = filteredItems ?? currentItems;
   const parentPermission = getParentPermission(currentPath);
@@ -430,6 +436,21 @@ export function Documents() {
         onRename={handleRename}
       />
       <BatchActions selectedCount={selectedItems.size} onDownload={handleBatchDownload} onMove={() => setMoveDialogOpen(true)} onDelete={handleBatchDelete} onClear={() => setSelectedItems(new Set())} />
+
+      {/* Project Settings Card - show when in a project folder */}
+      {currentProjectId && currentProjectName && (
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          <div className="lg:col-span-3">
+            {/* Main content will be rendered below */}
+          </div>
+          <div className="lg:col-span-1">
+            <ProjectSettingsCard 
+              projectId={currentProjectId} 
+              projectName={currentProjectName} 
+            />
+          </div>
+        </div>
+      )}
 
       {/* Content Area */}
       {currentItems.length === 0 ? (

@@ -294,6 +294,77 @@ export const activities: Activity[] = [
   },
 ];
 
+// Organization Staff Data (synced from LIMS)
+export interface StaffMember {
+  id: string;
+  name: string;
+  employeeId: string;
+  department: string;
+  role: string;
+  email: string;
+  syncStatus: 'synced' | 'pending' | 'error';
+  lastSyncAt: string;
+}
+
+export interface Department {
+  id: string;
+  name: string;
+  staffCount: number;
+}
+
+export const departments: Department[] = [
+  { id: 'dept-01', name: '无机电解质部', staffCount: 12 },
+  { id: 'dept-02', name: '高分子与界面部', staffCount: 8 },
+  { id: 'dept-03', name: '全固态电芯工艺部', staffCount: 15 },
+  { id: 'dept-04', name: '测试与表征部', staffCount: 10 },
+  { id: 'dept-05', name: '综合行政部', staffCount: 6 },
+];
+
+export const organizationStaff: StaffMember[] = [
+  // 无机电解质部
+  { id: 'staff-001', name: '王博', employeeId: 'GK-2021-001', department: '无机电解质部', role: '部门主管', email: 'wang.bo@gotion.com', syncStatus: 'synced', lastSyncAt: '2025-01-15 08:00' },
+  { id: 'staff-002', name: '张明华', employeeId: 'GK-2021-015', department: '无机电解质部', role: '高级研究员', email: 'zhang.mh@gotion.com', syncStatus: 'synced', lastSyncAt: '2025-01-15 08:00' },
+  { id: 'staff-003', name: '李雪', employeeId: 'GK-2022-008', department: '无机电解质部', role: '研究员', email: 'li.xue@gotion.com', syncStatus: 'synced', lastSyncAt: '2025-01-15 08:00' },
+  { id: 'staff-004', name: '陈伟', employeeId: 'GK-2022-023', department: '无机电解质部', role: '研究员', email: 'chen.wei@gotion.com', syncStatus: 'synced', lastSyncAt: '2025-01-15 08:00' },
+  { id: 'staff-005', name: '刘洋', employeeId: 'GK-2023-005', department: '无机电解质部', role: '助理研究员', email: 'liu.yang@gotion.com', syncStatus: 'synced', lastSyncAt: '2025-01-15 08:00' },
+  
+  // 高分子与界面部
+  { id: 'staff-006', name: '赵丽', employeeId: 'GK-2020-003', department: '高分子与界面部', role: '部门主管', email: 'zhao.li@gotion.com', syncStatus: 'synced', lastSyncAt: '2025-01-15 08:00' },
+  { id: 'staff-007', name: '钱峰', employeeId: 'GK-2021-022', department: '高分子与界面部', role: '高级研究员', email: 'qian.feng@gotion.com', syncStatus: 'synced', lastSyncAt: '2025-01-15 08:00' },
+  { id: 'staff-008', name: '孙婷', employeeId: 'GK-2022-011', department: '高分子与界面部', role: '研究员', email: 'sun.ting@gotion.com', syncStatus: 'synced', lastSyncAt: '2025-01-15 08:00' },
+  
+  // 全固态电芯工艺部
+  { id: 'staff-009', name: '周强', employeeId: 'GK-2019-008', department: '全固态电芯工艺部', role: '部门主管', email: 'zhou.qiang@gotion.com', syncStatus: 'synced', lastSyncAt: '2025-01-15 08:00' },
+  { id: 'staff-010', name: '吴凯', employeeId: 'GK-2020-015', department: '全固态电芯工艺部', role: '高级工程师', email: 'wu.kai@gotion.com', syncStatus: 'synced', lastSyncAt: '2025-01-15 08:00' },
+  { id: 'staff-011', name: '郑浩', employeeId: 'GK-2021-030', department: '全固态电芯工艺部', role: '工程师', email: 'zheng.hao@gotion.com', syncStatus: 'synced', lastSyncAt: '2025-01-15 08:00' },
+  { id: 'staff-012', name: '王芳', employeeId: 'GK-2022-019', department: '全固态电芯工艺部', role: '工程师', email: 'wang.fang@gotion.com', syncStatus: 'synced', lastSyncAt: '2025-01-15 08:00' },
+  
+  // 测试与表征部
+  { id: 'staff-013', name: '黄磊', employeeId: 'GK-2020-007', department: '测试与表征部', role: '部门主管', email: 'huang.lei@gotion.com', syncStatus: 'synced', lastSyncAt: '2025-01-15 08:00' },
+  { id: 'staff-014', name: '林静', employeeId: 'GK-2021-018', department: '测试与表征部', role: '高级测试工程师', email: 'lin.jing@gotion.com', syncStatus: 'synced', lastSyncAt: '2025-01-15 08:00' },
+  { id: 'staff-015', name: '徐明', employeeId: 'GK-2022-025', department: '测试与表征部', role: '测试工程师', email: 'xu.ming@gotion.com', syncStatus: 'synced', lastSyncAt: '2025-01-15 08:00' },
+  
+  // 综合行政部
+  { id: 'staff-016', name: '高远', employeeId: 'GK-2019-002', department: '综合行政部', role: '部门主管', email: 'gao.yuan@gotion.com', syncStatus: 'synced', lastSyncAt: '2025-01-15 08:00' },
+  { id: 'staff-017', name: '马丽娜', employeeId: 'GK-2020-020', department: '综合行政部', role: '人事专员', email: 'ma.lina@gotion.com', syncStatus: 'synced', lastSyncAt: '2025-01-15 08:00' },
+  { id: 'staff-018', name: '杨帆', employeeId: 'GK-2023-012', department: '综合行政部', role: '行政助理', email: 'yang.fan@gotion.com', syncStatus: 'pending', lastSyncAt: '2025-01-14 08:00' },
+];
+
+// Project Members (for project collaboration spaces)
+export interface ProjectMember {
+  staffId: string;
+  projectId: string;
+  role: 'admin' | 'editor' | 'viewer';
+  addedAt: string;
+}
+
+export const projectMembers: ProjectMember[] = [
+  { staffId: 'staff-001', projectId: 'project-01', role: 'admin', addedAt: '2025-01-01' },
+  { staffId: 'staff-002', projectId: 'project-01', role: 'editor', addedAt: '2025-01-01' },
+  { staffId: 'staff-009', projectId: 'project-01', role: 'editor', addedAt: '2025-01-05' },
+  { staffId: 'staff-010', projectId: 'project-01', role: 'viewer', addedAt: '2025-01-10' },
+];
+
 // AI Simulated Responses
 export const aiResponses: Record<string, string> = {
   'LPSC': `## Dept_01 关于 LPSC 合成的最新 SOP

@@ -4,6 +4,7 @@ import { Dashboard } from '@/components/pages/Dashboard';
 import { Documents } from '@/components/pages/Documents';
 import { IntelligencePage } from '@/components/pages/Intelligence';
 import { AIAssistant } from '@/components/pages/AIAssistant';
+import { Organization } from '@/components/pages/Organization';
 
 const Index = () => {
   const [currentPage, setCurrentPage] = useState('dashboard');
@@ -18,6 +19,8 @@ const Index = () => {
         return <IntelligencePage />;
       case 'assistant':
         return <AIAssistant />;
+      case 'organization':
+        return <Organization />;
       default:
         return <Dashboard onNavigate={setCurrentPage} />;
     }
