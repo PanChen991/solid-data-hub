@@ -279,8 +279,19 @@ export function Documents() {
 
   const handlePreviewFile = (item: FolderItem) => {
     if (item.type !== 'folder') {
-      setPreviewFile(item);
-      setPreviewOpen(true);
+      // 使用浏览器原生预览，在新窗口打开文件
+      // 由于目前是mock数据，使用模拟URL
+      // 实际项目中应该使用真实的文件URL
+      const mockFileUrls: Record<string, string> = {
+        'pdf': 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+        'xlsx': 'https://file-examples.com/storage/fe19e15eac6560f8c936c03/2017/02/file_example_XLS_10.xls',
+        'docx': 'https://file-examples.com/storage/fe19e15eac6560f8c936c03/2017/02/file-sample_100kB.doc',
+        'pptx': 'https://file-examples.com/storage/fe19e15eac6560f8c936c03/2017/08/file_example_PPT_250kB.ppt',
+      };
+      
+      const fileUrl = mockFileUrls[item.type || 'pdf'] || mockFileUrls['pdf'];
+      window.open(fileUrl, '_blank', 'noopener,noreferrer');
+      toast.info(`正在打开: ${item.name}`);
     }
   };
 
