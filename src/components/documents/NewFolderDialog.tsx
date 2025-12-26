@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
-import { Folder, Lock, Users, Building2, Globe, Info } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Folder, Lock, Users, Building2, Globe, Info, UserPlus, X, Search, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Dialog,
   DialogContent,
@@ -18,6 +20,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { organizationStaff, departments, StaffMember } from '@/data/mockData';
 
 export interface ParentPermission {
   type: 'all' | 'department' | 'project' | 'private' | 'inherit';
@@ -29,8 +37,10 @@ interface NewFolderDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   currentPath: string;
-  onCreate: (name: string, permission: string) => void;
+  onCreate: (name: string, permission: string, adminIds?: string[]) => void;
   parentPermission?: ParentPermission;
+  isFirstLevel?: boolean; // Whether we're creating a first-level folder (project/department)
+  spaceType?: 'projects' | 'departments' | 'public'; // Type of space we're in
 }
 
 const permissionOptions = [
@@ -61,10 +71,54 @@ const getPermissionColor = (type: string) => {
   }
 };
 
-export function NewFolderDialog({ open, onOpenChange, currentPath, onCreate, parentPermission }: NewFolderDialogProps) {
+export function NewFolderDialog({ 
+  open, 
+  onOpenChange, 
+  currentPath, 
+  onCreate, 
+  parentPermission,
+  isFirstLevel = false,
+  spaceType
+}: NewFolderDialogProps) {
   const [folderName, setFolderName] = useState('');
   const [permission, setPermission] = useState('inherit');
   const [error, setError] = useState('');
+  const [selectedAdmins, setSelectedAdmins] = useState<string[]>([]);
+  const [adminSearchQuery, setAdminSearchQuery] = useState('');
+  const [adminPopoverOpen, setAdminPopoverOpen] = useState(false);
+  const [expandedDepartments, setExpandedDepartments] = useState<string[]>([]);
+
+  // Show admin selection for first-level folders in project or department spaces
+  const showAdminSelection = isFirstLevel && (spaceType === 'projects' || spaceType === 'departments');
+
+  // Filter available staff
+  const filteredStaff = useMemo(() => {
+    return organizationStaff.filter(staff => {
+      const notSelected = !selectedAdmins.includes(staff.id);
+      const matchesSearch = 
+        staff.name.toLowerCase().includes(adminSearchQuery.toLowerCase()) ||
+        staff.employeeId.toLowerCase().includes(adminSearchQuery.toLowerCase()) ||
+        staff.role.toLowerCase().includes(adminSearchQuery.toLowerCase());
+      return notSelected && matchesSearch;
+    });
+  }, [selectedAdmins, adminSearchQuery]);
+
+  // Get selected admin details
+  const selectedAdminDetails = useMemo(() => {
+    return organizationStaff.filter(staff => selectedAdmins.includes(staff.id));
+  }, [selectedAdmins]);
+
+  // Group staff by department
+  const staffByDepartment = useMemo(() => {
+    const grouped: Record<string, StaffMember[]> = {};
+    departments.forEach(dept => {
+      const deptStaff = filteredStaff.filter(s => s.department === dept.name);
+      if (deptStaff.length > 0) {
+        grouped[dept.name] = deptStaff;
+      }
+    });
+    return grouped;
+  }, [filteredStaff]);
 
   // Reset when dialog opens
   useEffect(() => {
@@ -72,6 +126,9 @@ export function NewFolderDialog({ open, onOpenChange, currentPath, onCreate, par
       setFolderName('');
       setPermission('inherit');
       setError('');
+      setSelectedAdmins([]);
+      setAdminSearchQuery('');
+      setExpandedDepartments([]);
     }
   }, [open]);
 
@@ -88,7 +145,7 @@ export function NewFolderDialog({ open, onOpenChange, currentPath, onCreate, par
       return;
     }
 
-    onCreate(folderName.trim(), permission);
+    onCreate(folderName.trim(), permission, showAdminSelection ? selectedAdmins : undefined);
     handleClose();
   };
 
@@ -96,7 +153,24 @@ export function NewFolderDialog({ open, onOpenChange, currentPath, onCreate, par
     setFolderName('');
     setPermission('inherit');
     setError('');
+    setSelectedAdmins([]);
     onOpenChange(false);
+  };
+
+  const addAdmin = (staffId: string) => {
+    setSelectedAdmins(prev => [...prev, staffId]);
+  };
+
+  const removeAdmin = (staffId: string) => {
+    setSelectedAdmins(prev => prev.filter(id => id !== staffId));
+  };
+
+  const toggleDepartment = (deptName: string) => {
+    setExpandedDepartments(prev => 
+      prev.includes(deptName) 
+        ? prev.filter(d => d !== deptName)
+        : [...prev, deptName]
+    );
   };
 
   const selectedPermission = permissionOptions.find(p => p.value === permission);
@@ -105,7 +179,10 @@ export function NewFolderDialog({ open, onOpenChange, currentPath, onCreate, par
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[440px] bg-card/95 backdrop-blur-xl border-border/50">
+      <DialogContent className={cn(
+        "bg-card/95 backdrop-blur-xl border-border/50",
+        showAdminSelection ? "sm:max-w-[520px]" : "sm:max-w-[440px]"
+      )}>
         <DialogHeader>
           <DialogTitle className="text-lg font-semibold flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
@@ -163,6 +240,125 @@ export function NewFolderDialog({ open, onOpenChange, currentPath, onCreate, par
               <p className="text-xs text-destructive">{error}</p>
             )}
           </div>
+
+          {/* Admin Selection - Only show for first-level folders */}
+          {showAdminSelection && (
+            <div className="space-y-2">
+              <Label className="text-sm font-medium flex items-center gap-2">
+                <Users className="w-4 h-4 text-muted-foreground" />
+                管理员
+                <span className="text-xs text-muted-foreground font-normal">(可选)</span>
+              </Label>
+              
+              {/* Selected Admins */}
+              {selectedAdminDetails.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {selectedAdminDetails.map(admin => (
+                    <Badge 
+                      key={admin.id} 
+                      variant="secondary" 
+                      className="pl-2 pr-1 py-1 gap-1"
+                    >
+                      <span className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center text-xs font-medium">
+                        {admin.name.charAt(0)}
+                      </span>
+                      <span>{admin.name}</span>
+                      <button
+                        onClick={() => removeAdmin(admin.id)}
+                        className="ml-1 p-0.5 hover:bg-muted rounded"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
+
+              {/* Add Admin Button */}
+              <Popover open={adminPopoverOpen} onOpenChange={setAdminPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2 w-full justify-start">
+                    <UserPlus className="w-4 h-4" />
+                    添加管理员
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 p-0" align="start">
+                  <div className="p-3 border-b border-border/50">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        placeholder="搜索人员..."
+                        value={adminSearchQuery}
+                        onChange={(e) => setAdminSearchQuery(e.target.value)}
+                        className="pl-9 h-8"
+                      />
+                    </div>
+                  </div>
+                  <ScrollArea className="h-64">
+                    <div className="p-2">
+                      {Object.keys(staffByDepartment).length === 0 ? (
+                        <div className="text-center py-6 text-muted-foreground text-sm">
+                          未找到人员
+                        </div>
+                      ) : (
+                        Object.entries(staffByDepartment).map(([deptName, staff]) => {
+                          const isExpanded = expandedDepartments.includes(deptName);
+                          return (
+                            <div key={deptName} className="mb-1">
+                              <button
+                                onClick={() => toggleDepartment(deptName)}
+                                className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-accent/50 transition-colors"
+                              >
+                                <ChevronRight 
+                                  className={cn(
+                                    "w-3.5 h-3.5 text-muted-foreground transition-transform",
+                                    isExpanded && "rotate-90"
+                                  )} 
+                                />
+                                <span className="text-sm font-medium flex-1 text-left">{deptName}</span>
+                                <Badge variant="secondary" className="text-xs h-5">
+                                  {staff.length}
+                                </Badge>
+                              </button>
+                              
+                              {isExpanded && (
+                                <div className="ml-5 space-y-0.5">
+                                  {staff.map(person => (
+                                    <button
+                                      key={person.id}
+                                      onClick={() => {
+                                        addAdmin(person.id);
+                                        setAdminPopoverOpen(false);
+                                      }}
+                                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-accent/50 transition-colors"
+                                    >
+                                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary/60 to-primary flex items-center justify-center">
+                                        <span className="text-xs font-medium text-primary-foreground">
+                                          {person.name.charAt(0)}
+                                        </span>
+                                      </div>
+                                      <div className="flex-1 text-left">
+                                        <p className="text-sm">{person.name}</p>
+                                        <p className="text-xs text-muted-foreground">{person.role}</p>
+                                      </div>
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  </ScrollArea>
+                </PopoverContent>
+              </Popover>
+              
+              <p className="text-xs text-muted-foreground">
+                管理员可以管理文件夹成员和权限设置
+              </p>
+            </div>
+          )}
 
           {/* Permission Selection */}
           <div className="space-y-2">
