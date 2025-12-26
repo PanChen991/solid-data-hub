@@ -7,6 +7,7 @@ const stats = [
     label: '内部文档',
     value: '128',
     change: '+12',
+    changeLabel: '较上周',
     icon: FileText,
     iconBg: 'bg-blue-100',
     iconColor: 'text-blue-600',
@@ -15,6 +16,7 @@ const stats = [
     label: '论文收录',
     value: intelligences.filter(i => i.type === 'paper').length.toString(),
     change: '+5',
+    changeLabel: '较上周',
     icon: Globe,
     iconBg: 'bg-purple-100',
     iconColor: 'text-purple-600',
@@ -23,6 +25,7 @@ const stats = [
     label: '专利追踪',
     value: intelligences.filter(i => i.type === 'patent').length.toString(),
     change: '+3',
+    changeLabel: '较上周',
     icon: TrendingUp,
     iconBg: 'bg-amber-100',
     iconColor: 'text-amber-600',
@@ -31,6 +34,7 @@ const stats = [
     label: 'AI 对话',
     value: '256',
     change: '+48',
+    changeLabel: '较上周',
     icon: Bot,
     iconBg: 'bg-green-100',
     iconColor: 'text-green-600',
@@ -71,9 +75,10 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                 <div className={cn('w-9 h-9 rounded-lg flex items-center justify-center', stat.iconBg)}>
                   <Icon className={cn('w-4 h-4', stat.iconColor)} />
                 </div>
-                <span className="text-xs font-medium text-green-600 bg-green-50 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                <span className="text-xs font-medium text-green-600 bg-green-50 px-1.5 py-0.5 rounded-full flex items-center gap-0.5" title={stat.changeLabel}>
                   <ArrowUpRight className="w-3 h-3" />
                   {stat.change}
+                  <span className="text-green-500 ml-0.5">{stat.changeLabel}</span>
                 </span>
               </div>
               <p className="text-2xl font-semibold text-foreground">{stat.value}</p>
